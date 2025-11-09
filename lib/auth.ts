@@ -1,13 +1,13 @@
 import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
-import type { Session } from "next-auth";
-import type { Account } from "next-auth";
+import type { Session, Account, Profile } from "next-auth";
+import type { AuthOptions } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
 import { OAuthProfile } from "@/types/next-auth";
 
 
-export const authOptions = {
+export const authOptions: AuthOptions = {
   providers: [
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID!,
@@ -26,37 +26,30 @@ export const authOptions = {
   ],
 
   callbacks: {
-    async signIn({
-    
-      account,
-      profile,
-    }: {
-
-      account: Account | null;
-      profile: OAuthProfile | undefined;
-    }) {
+    async signIn({ account, profile }: { account: Account | null; profile?: Profile }) {
       if (!account || !profile) {
         console.log("Missing account or profile");
         return false;
       }
     
       const provider = account.provider;
+      const oauthProfile = profile as OAuthProfile;
     
       let providerId: string;
       let email: string | null = null;
       let name: string | null = null;
       let pfp: string | null = null;
     
-      if ("sub" in profile) {
-        providerId = profile.sub;
-        email = profile.email ?? null;
-        name = profile.name ?? null;
-        pfp = profile.picture ?? null;
+      if ("sub" in oauthProfile) {
+        providerId = oauthProfile.sub;
+        email = oauthProfile.email ?? null;
+        name = oauthProfile.name ?? null;
+        pfp = oauthProfile.picture ?? null;
       } else {
-        providerId = profile.id.toString();
-        email = profile.email ?? null;
-        name = profile.name ?? profile.login ?? null;
-        pfp = profile.avatar_url ?? null;
+        providerId = oauthProfile.id.toString();
+        email = oauthProfile.email ?? null;
+        name = oauthProfile.name ?? oauthProfile.login ?? null;
+        pfp = oauthProfile.avatar_url ?? null;
       }
     
       const whereClause =
@@ -88,7 +81,7 @@ export const authOptions = {
     } ,
     
     
-    async jwt({ token, account } : {token : JWT , account : Account}) {
+    async jwt({ token, account }: { token: JWT; account: Account | null }) {
       if (account?.access_token) {
         token.accessToken = account.access_token;
       }

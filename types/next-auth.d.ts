@@ -3,7 +3,10 @@ import NextAuth from "next-auth";
 declare module "next-auth" {
   interface Session {
     userId?: string;
+    username?: string | null;
     accessToken?: string;
+    hasGitHub?: boolean;
+    hasGoogle?: boolean;
   }
 }
 

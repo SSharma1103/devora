@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String?
+  username  String?   @unique
+  pfp       String?
+  banner    String?
+  email     String?   @unique
+  github    String?
+  leetcode  String?
+  googleId  String?   @unique
+  githubId  String?   @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  gitdata   Gitdata?
+  pdata     Pdata?
+  projects  Project[] @relation("UserProjects")
+  workExp   WorkExp[] @relation("UserWorkExp")
+}
+
+model Gitdata {
+  id                    Int      @id @default(autoincrement())
+  repos                 Int?
+  privateRepos          Int?
+  commits               Int?
+  followers             Int?
+  following             Int?
+  stars                 Int?
+  totalContributions    Int?
+  contributionsThisYear Int?
+  contributionsNotOwned Int?
+  accountAge            Int? // in days
+  commitHistory         Json? // Store commit history as JSON
+  lastSynced            DateTime @default(now()) @updatedAt
+  userId                Int?     @unique
+  user                  User?    @relation(fields: [userId], references: [id])
+}
+
+model Pdata {
+  id       Int     @id @default(autoincrement())
+  about    String?
+  devstats String?
+  stack    String?
+  socials  Json?
+  userId   Int?    @unique
+  user     User?   @relation(fields: [userId], references: [id])
+}
+
+model WorkExp {
+  id          Int     @id @default(autoincrement())
+  title       String
+  duration    String?
+  description String?
+  companyName String?
+  image       String?
+  userId      Int?
+  user        User?   @relation("UserWorkExp", fields: [userId], references: [id])
+}
+
+model Project {
+  id          Int     @id @default(autoincrement())
+  title       String
+  link        String?
+  description String?
+  gitlink     String?
+  userId      Int?
+  user        User?   @relation("UserProjects", fields: [userId], references: [id])
+}

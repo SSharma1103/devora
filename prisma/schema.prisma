@@ -27,14 +27,21 @@ model User {
 }
 
 model Gitdata {
-  id        Int   @id @default(autoincrement())
-  repos     Int?
-  commits   Int?
-  followers Int?
-  following Int?
-  stars     Int?
-  userId    Int?  @unique
-  user      User? @relation(fields: [userId], references: [id])
+  id                    Int      @id @default(autoincrement())
+  repos                 Int?
+  privateRepos          Int?
+  commits               Int?
+  followers             Int?
+  following             Int?
+  stars                 Int?
+  totalContributions    Int?
+  contributionsThisYear Int?
+  contributionsNotOwned Int?
+  accountAge            Int? // in days
+  commitHistory         Json? // Store commit history as JSON
+  lastSynced            DateTime @default(now()) @updatedAt
+  userId                Int?     @unique
+  user                  User?    @relation(fields: [userId], references: [id])
 }
 
 model Pdata {

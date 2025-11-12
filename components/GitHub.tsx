@@ -1,16 +1,31 @@
+//[copy:ssharma1103/devora/devora-b7321077cd9d75e6fb001acbeaa36d22b960d15c/components/GitHub.tsx]
 "use client";
 
 import { useEffect, useState } from "react";
 import { GitMerge, GitBranch, User, CheckCircle2, RefreshCw, Plus } from "lucide-react";
 
-export default function Github() {
+// 1. Add Props interface
+interface GithubProps {
+  gitData?: any; // Make it optional
+}
+
+// 2. Accept props
+export default function Github({ gitData: gitDataProp }: GithubProps) {
   const [gitData, setGitData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch data on mount
+  // 3. Update useEffect
   useEffect(() => {
+    // If data is passed as a prop, use it directly
+    if (gitDataProp) {
+      setGitData(gitDataProp);
+      setLoading(false);
+      return; // Skip fetching
+    }
+
+    // If no prop, fetch data as usual (for the dashboard)
     const fetchData = async () => {
       try {
         const res = await fetch("/api/gitdata/sync", { method: "GET" });
@@ -27,9 +42,9 @@ export default function Github() {
     };
 
     fetchData();
-  }, []);
+  }, [gitDataProp]); // Add prop to dependency array
 
-  // Handle manual sync
+  // Handle manual sync (only used on dashboard)
   const handleSync = async () => {
     try {
       setSyncing(true);
@@ -58,26 +73,36 @@ export default function Github() {
     return (
       <div className="bg-red-900/30 border border-red-700 rounded-xl p-4 text-red-400 text-sm flex flex-col items-center">
         <span>{error}</span>
-        <button
-          onClick={handleSync}
-          className="mt-2 px-3 py-1 bg-red-700 hover:bg-red-600 rounded-md text-white text-sm transition"
-        >
-          Retry
-        </button>
+        {/* 4. Conditionally show Retry button */}
+        {!gitDataProp && (
+          <button
+            onClick={handleSync}
+            className="mt-2 px-3 py-1 bg-red-700 hover:bg-red-600 rounded-md text-white text-sm transition"
+          >
+            Retry
+          </button>
+        )}
       </div>
     );
 
   if (!gitData)
     return (
       <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 text-center text-gray-400">
-        No GitHub data found.  
-        <button
-          onClick={handleSync}
-          className="mt-3 flex items-center justify-center gap-1 px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-white text-sm transition"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Sync Now</span>
-        </button>
+        {/* 5. Conditionally show Sync button */}
+        {!gitDataProp ? (
+          <>
+            No GitHub data found.
+            <button
+              onClick={handleSync}
+              className="mt-3 flex items-center justify-center gap-1 px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-white text-sm transition"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Sync Now</span>
+            </button>
+          </>
+        ) : (
+          "No GitHub data available for this user."
+        )}
       </div>
     );
 
@@ -89,23 +114,26 @@ export default function Github() {
       {/* Top Bar */}
       <div className="flex justify-between items-center">
         <h2 className="text-gray-100 font-semibold text-lg">GitHub Overview</h2>
-        <button
-          onClick={handleSync}
-          disabled={syncing}
-          className="flex items-center gap-1 px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-300 transition"
-        >
-          {syncing ? (
-            <>
-              <RefreshCw className="h-4 w-4 animate-spin" />
-              <span>Syncing...</span>
-            </>
-          ) : (
-            <>
-              <Plus className="h-4 w-4" />
-              <span>Sync</span>
-            </>
-          )}
-        </button>
+        {/* 6. Conditionally show Sync button */}
+        {!gitDataProp && (
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            className="flex items-center gap-1 px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-300 transition"
+          >
+            {syncing ? (
+              <>
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                <span>Syncing...</span>
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4" />
+                <span>Sync</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {/* Stats Summary */}

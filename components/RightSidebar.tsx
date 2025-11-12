@@ -1,3 +1,4 @@
+//[copy:ssharma1103/devora/devora-b7321077cd9d75e6fb001acbeaa36d22b960d15c/components/RightSidebar.tsx]
 "use client";
 
 import { useEffect, useState } from "react";
@@ -16,12 +17,27 @@ interface Pdata {
   };
 }
 
-export default function RightSidebar() {
+// 1. Add Props interface
+interface SidebarProps {
+  pdata?: Pdata | null; // Make it optional
+}
+
+// 2. Accept props
+export default function RightSidebar({ pdata: pdataProp }: SidebarProps) {
   const [pdata, setPdata] = useState<Pdata | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // 3. Update useEffect
   useEffect(() => {
+    // If data is passed as a prop, use it directly
+    if (pdataProp) {
+      setPdata(pdataProp);
+      setLoading(false);
+      return; // Skip fetching
+    }
+
+    // If no prop, fetch data as usual (for the dashboard)
     async function fetchPdata() {
       try {
         const res = await fetch("/api/pdata");
@@ -36,7 +52,7 @@ export default function RightSidebar() {
     }
 
     fetchPdata();
-  }, []);
+  }, [pdataProp]); // Add prop to dependency array
 
   if (loading)
     return (
@@ -55,7 +71,7 @@ export default function RightSidebar() {
   if (!pdata)
     return (
       <aside className="hidden lg:block w-80 p-4 text-gray-400 ml-10">
-        No personal data found. Update your profile to get started.
+        No personal data found.
       </aside>
     );
 
@@ -67,8 +83,7 @@ export default function RightSidebar() {
       <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4">
         <h3 className="text-lg font-semibold mb-2">About</h3>
         <p className="text-sm text-neutral-400 leading-relaxed">
-          {pdata.about ||
-            "No bio yet. Add your personal description in your profile settings."}
+          {pdata.about || "No bio yet."}
         </p>
       </div>
 

@@ -1,3 +1,4 @@
+//[copy:ssharma1103/devora/devora-b7321077cd9d75e6fb001acbeaa36d22b960d15c/components/Projects.tsx]
 "use client";
 
 import { useState, useEffect } from "react";
@@ -12,7 +13,13 @@ interface Project {
   createdAt?: string;
 }
 
-export default function Projects() {
+// 1. Add Props interface
+interface ProjectsProps {
+  projectsData?: Project[]; // Make it optional
+}
+
+// 2. Accept props
+export default function Projects({ projectsData }: ProjectsProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -25,8 +32,16 @@ export default function Projects() {
     gitlink: "",
   });
 
-  // Fetch user projects
+  // 3. Update useEffect
   useEffect(() => {
+    // If data is passed as a prop, use it directly
+    if (projectsData) {
+      setProjects(projectsData);
+      setLoading(false);
+      return; // Skip fetching
+    }
+
+    // If no prop, fetch data as usual (for the dashboard)
     const fetchProjects = async () => {
       try {
         const res = await fetch("/api/projects");
@@ -43,7 +58,7 @@ export default function Projects() {
     };
 
     fetchProjects();
-  }, []);
+  }, [projectsData]); // Add prop to dependency array
 
   // Add new project
   const handleAddProject = async (e: React.FormEvent) => {
@@ -83,70 +98,82 @@ export default function Projects() {
 
   return (
     <section id="projects" className="w-full max-w-5xl mx-auto text-white">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Projects</h2>
-        <button
-          onClick={() => {
-            const form = document.getElementById("add-project-form");
-            form?.classList.toggle("hidden");
-          }}
-          className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg text-sm text-gray-200 transition"
-        >
-          <Plus className="h-4 w-4" /> Add Project
-        </button>
-      </div>
+      {/* 4. Conditionally show Add button */}
+      {!projectsData && (
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold">Projects</h2>
+          <button
+            onClick={() => {
+              const form = document.getElementById("add-project-form");
+              form?.classList.toggle("hidden");
+            }}
+            className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg text-sm text-gray-200 transition"
+          >
+            <Plus className="h-4 w-4" /> Add Project
+          </button>
+        </div>
+      )}
+      
+      {/* 5. Conditionally show header (for public view) */}
+      {projectsData && (
+         <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold">Projects</h2>
+        </div>
+      )}
 
-      {/* Add Project Form */}
-      <form
-        id="add-project-form"
-        onSubmit={handleAddProject}
-        className="hidden mb-6 bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3"
-      >
-        <input
-          type="text"
-          placeholder="Project Title"
-          className="w-full p-2 bg-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={newProject.title}
-          onChange={(e) =>
-            setNewProject({ ...newProject, title: e.target.value })
-          }
-        />
-        <textarea
-          placeholder="Project Description"
-          className="w-full p-2 bg-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={newProject.description}
-          onChange={(e) =>
-            setNewProject({ ...newProject, description: e.target.value })
-          }
-        />
-        <input
-          type="text"
-          placeholder="Live Link (optional)"
-          className="w-full p-2 bg-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={newProject.link}
-          onChange={(e) =>
-            setNewProject({ ...newProject, link: e.target.value })
-          }
-        />
-        <input
-          type="text"
-          placeholder="GitHub Link (optional)"
-          className="w-full p-2 bg-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={newProject.gitlink}
-          onChange={(e) =>
-            setNewProject({ ...newProject, gitlink: e.target.value })
-          }
-        />
-
-        <button
-          type="submit"
-          disabled={adding}
-          className="w-full flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg transition"
+      {/* 6. Conditionally show form (it will never show on public page) */}
+      {!projectsData && (
+        <form
+          id="add-project-form"
+          onSubmit={handleAddProject}
+          className="hidden mb-6 bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3"
         >
-          {adding && <Loader2 className="animate-spin h-4 w-4" />}
-          {adding ? "Adding..." : "Add Project"}
-        </button>
-      </form>
+          <input
+            type="text"
+            placeholder="Project Title"
+            className="w-full p-2 bg-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={newProject.title}
+            onChange={(e) =>
+              setNewProject({ ...newProject, title: e.target.value })
+            }
+          />
+          <textarea
+            placeholder="Project Description"
+            className="w-full p-2 bg-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={newProject.description}
+            onChange={(e) =>
+              setNewProject({ ...newProject, description: e.target.value })
+            }
+          />
+          <input
+            type="text"
+            placeholder="Live Link (optional)"
+            className="w-full p-2 bg-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={newProject.link}
+            onChange={(e) =>
+              setNewProject({ ...newProject, link: e.target.value })
+            }
+          />
+          <input
+            type="text"
+            placeholder="GitHub Link (optional)"
+            className="w-full p-2 bg-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={newProject.gitlink}
+            onChange={(e) =>
+              setNewProject({ ...newProject, gitlink: e.target.value })
+            }
+          />
+
+          <button
+            type="submit"
+            disabled={adding}
+            className="w-full flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg transition"
+          >
+            {adding && <Loader2 className="animate-spin h-4 w-4" />}
+            {adding ? "Adding..." : "Add Project"}
+          </button>
+        </form>
+      )}
 
       {error && (
         <div className="text-red-400 text-sm mb-4 border border-red-700 bg-red-900/20 rounded-lg p-3">

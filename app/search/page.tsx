@@ -1,8 +1,10 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { Search, User, FolderGit2, Code } from "lucide-react";
 import Sidebar from "@/components/sidebar";
+import Link from "next/link"; // 1. Import the Link component
 
 interface UserType {
   id: number;
@@ -45,7 +47,7 @@ export default function DiscoverPage() {
     fetchUsers();
   }, []);
 
-  // Placeholder projects (static)
+  // ... (static projectData remains the same) ...
   const projectData = [
     {
       title: "AI Code Assistant",
@@ -59,9 +61,11 @@ export default function DiscoverPage() {
     },
   ];
 
+
   // Developer card (live data)
   const DeveloperCard = ({ dev }: { dev: UserType }) => (
-    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 transition-all hover:border-blue-500/50">
+    // 2. Added "cursor-pointer" to make it feel interactive
+    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 transition-all hover:border-blue-500/50 cursor-pointer">
       <div className="flex items-center gap-4">
         {dev.pfp ? (
           <img
@@ -87,8 +91,8 @@ export default function DiscoverPage() {
     </div>
   );
 
-  // Project card (static)
-  const ProjectCard = ({
+  // ... (ProjectCard component remains the same) ...
+    const ProjectCard = ({
     item,
   }: {
     item: (typeof projectData)[0];
@@ -114,6 +118,7 @@ export default function DiscoverPage() {
     </div>
   );
 
+
   return (
     <div className="flex bg-black text-white min-h-screen">
       {/* --- Sidebar --- */}
@@ -121,7 +126,7 @@ export default function DiscoverPage() {
 
       {/* --- Main Discover Content --- */}
       <main className="flex-1 relative min-h-screen p-8 md:p-12 overflow-hidden">
-        {/* Background Gradient Blobs */}
+        {/* ... (Background Gradient Blobs remain the same) ... */}
         <div className="absolute inset-0 z-0 opacity-40">
           <div className="absolute -top-20 -left-20 w-96 h-96 bg-purple-900 rounded-full filter blur-3xl opacity-30 animate-pulse"></div>
           <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-blue-900 rounded-full filter blur-3xl opacity-30 animate-pulse [animation-delay:-3s]"></div>
@@ -129,12 +134,12 @@ export default function DiscoverPage() {
 
         {/* Page Content */}
         <div className="relative z-10 max-w-6xl mx-auto">
+          {/* ... (Header, Search, and Tabs remain the same) ... */}
           <h1 className="text-4xl font-bold mb-3">Discover</h1>
           <p className="text-lg text-neutral-400 mb-8">
             Explore new projects, find talented developers, and get inspired.
           </p>
 
-          {/* Search Bar */}
           <div className="relative w-full mb-8">
             <input
               type="text"
@@ -147,7 +152,6 @@ export default function DiscoverPage() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
           </div>
 
-          {/* Tabs */}
           <nav className="border-b border-neutral-800 mb-8">
             <ul className="flex gap-8">
               <li
@@ -175,6 +179,7 @@ export default function DiscoverPage() {
             </ul>
           </nav>
 
+
           {/* Grid Content */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {activeTab === "developers" && (
@@ -184,7 +189,12 @@ export default function DiscoverPage() {
                 ) : error ? (
                   <p className="text-red-500">{error}</p>
                 ) : users.length > 0 ? (
-                  users.map((dev) => <DeveloperCard key={dev.id} dev={dev} />)
+                  // 3. Wrap the DeveloperCard in a Link component
+                  users.map((dev) => (
+                    <Link href={`/${dev.username}`} key={dev.id}>
+                      <DeveloperCard dev={dev} />
+                    </Link>
+                  ))
                 ) : (
                   <p className="text-neutral-500 col-span-full text-center">
                     No developers found.

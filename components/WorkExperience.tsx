@@ -1,3 +1,4 @@
+//[copy:ssharma1103/devora/devora-b7321077cd9d75e6fb001acbeaa36d22b960d15c/components/WorkExperience.tsx]
 "use client";
 
 import { useState, useEffect } from "react";
@@ -13,7 +14,13 @@ interface WorkExp {
   createdAt?: string;
 }
 
-export default function Experience() {
+// 1. Add Props interface
+interface ExperienceProps {
+  workExpData?: WorkExp[]; // Make it optional
+}
+
+// 2. Accept props
+export default function Experience({ workExpData }: ExperienceProps) {
   const [experiences, setExperiences] = useState<WorkExp[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -27,8 +34,16 @@ export default function Experience() {
     image: "",
   });
 
-  // Fetch experiences on mount
+  // 3. Update useEffect
   useEffect(() => {
+    // If data is passed as a prop, use it directly
+    if (workExpData) {
+      setExperiences(workExpData);
+      setLoading(false);
+      return; // Skip fetching
+    }
+
+    // If no prop, fetch data as usual (for the dashboard)
     const fetchExperience = async () => {
       try {
         const res = await fetch("/api/workexp");
@@ -45,7 +60,7 @@ export default function Experience() {
     };
 
     fetchExperience();
-  }, []);
+  }, [workExpData]); // Add prop to dependency array
 
   // Handle add new experience
   const handleAdd = async (e: React.FormEvent) => {
@@ -85,70 +100,82 @@ export default function Experience() {
 
   return (
     <section id="experience" className="w-full max-w-5xl mx-auto text-white">
-      {/* Header with + Add */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Work Experience</h2>
-        <button
-          onClick={() => {
-            const form = document.getElementById("add-exp-form");
-            form?.classList.toggle("hidden");
-          }}
-          className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg text-sm text-gray-200 transition"
-        >
-          <Plus className="h-4 w-4" /> Add Experience
-        </button>
-      </div>
+      {/* 4. Conditionally show Add button */}
+      {!workExpData && (
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold">Work Experience</h2>
+          <button
+            onClick={() => {
+              const form = document.getElementById("add-exp-form");
+              form?.classList.toggle("hidden");
+            }}
+            className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg text-sm text-gray-200 transition"
+          >
+            <Plus className="h-4 w-4" /> Add Experience
+          </button>
+        </div>
+      )}
+      
+      {/* 5. Conditionally show header (for public view) */}
+      {workExpData && (
+        <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold">Work Experience</h2>
+        </div>
+      )}
 
-      {/* Add Experience Form */}
-      <form
-        id="add-exp-form"
-        onSubmit={handleAdd}
-        className="hidden mb-6 bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3"
-      >
-        <input
-          type="text"
-          placeholder="Job Title"
-          className="w-full p-2 bg-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={newExp.title}
-          onChange={(e) => setNewExp({ ...newExp, title: e.target.value })}
-        />
-        <input
-          type="text"
-          placeholder="Company Name"
-          className="w-full p-2 bg-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={newExp.companyName}
-          onChange={(e) => setNewExp({ ...newExp, companyName: e.target.value })}
-        />
-        <input
-          type="text"
-          placeholder="Duration (e.g., 2022 - Present)"
-          className="w-full p-2 bg-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={newExp.duration}
-          onChange={(e) => setNewExp({ ...newExp, duration: e.target.value })}
-        />
-        <textarea
-          placeholder="Description"
-          className="w-full p-2 bg-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={newExp.description}
-          onChange={(e) => setNewExp({ ...newExp, description: e.target.value })}
-        />
-        <input
-          type="text"
-          placeholder="Image URL (optional)"
-          className="w-full p-2 bg-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={newExp.image}
-          onChange={(e) => setNewExp({ ...newExp, image: e.target.value })}
-        />
 
-        <button
-          type="submit"
-          disabled={adding}
-          className="w-full flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg transition"
+      {/* 6. Conditionally show form (it will never show on public page) */}
+      {!workExpData && (
+        <form
+          id="add-exp-form"
+          onSubmit={handleAdd}
+          className="hidden mb-6 bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3"
         >
-          {adding && <Loader2 className="animate-spin h-4 w-4" />}
-          {adding ? "Adding..." : "Add Experience"}
-        </button>
-      </form>
+          <input
+            type="text"
+            placeholder="Job Title"
+            className="w-full p-2 bg-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={newExp.title}
+            onChange={(e) => setNewExp({ ...newExp, title: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="Company Name"
+            className="w-full p-2 bg-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={newExp.companyName}
+            onChange={(e) => setNewExp({ ...newExp, companyName: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="Duration (e.g., 2022 - Present)"
+            className="w-full p-2 bg-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={newExp.duration}
+            onChange={(e) => setNewExp({ ...newExp, duration: e.target.value })}
+          />
+          <textarea
+            placeholder="Description"
+            className="w-full p-2 bg-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={newExp.description}
+            onChange={(e) => setNewExp({ ...newExp, description: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="Image URL (optional)"
+            className="w-full p-2 bg-black border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={newExp.image}
+            onChange={(e) => setNewExp({ ...newExp, image: e.target.value })}
+          />
+
+          <button
+            type="submit"
+            disabled={adding}
+            className="w-full flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg transition"
+          >
+            {adding && <Loader2 className="animate-spin h-4 w-4" />}
+            {adding ? "Adding..." : "Add Experience"}
+          </button>
+        </form>
+      )}
 
       {error && (
         <div className="text-red-400 text-sm mb-4 border border-red-700 bg-red-900/20 rounded-lg p-3">

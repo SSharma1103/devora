@@ -1,3 +1,4 @@
+//[copy:ssharma1103/devora/devora-b7321077cd9d75e6fb001acbeaa36d22b960d15c/components/Leetcode.tsx]
 "use client";
 
 import { useEffect, useState } from "react";
@@ -26,7 +27,13 @@ function ProgressBar({ progress }: { progress: number }) {
   );
 }
 
-export default function LeetCodeStatsCard() {
+// 1. Add Props interface
+interface LeetCodeProps {
+  leetcodeUsername?: string | null;
+}
+
+// 2. Accept props
+export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
   const [data, setData] = useState<any>(null);
   const [badgesData, setBadgesData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -34,14 +41,27 @@ export default function LeetCodeStatsCard() {
 
   useEffect(() => {
     async function fetchUser() {
+      // 3. Determine username
+      //    If prop is provided (public profile), use it.
+      //    If prop is undefined (dashboard), use the hardcoded username.
+      const username = leetcodeUsername === undefined ? "shivam-727" : leetcodeUsername;
+
+      // 4. If username is null or empty, don't fetch.
+      if (!username) {
+        setLoading(false);
+        setError("No LeetCode username provided.");
+        return;
+      }
+
       try {
+        // setLoading(true); // Moved from outside try
         const [profileRes, badgesRes] = await Promise.all([
-          fetch("https://backendpoint-alpha.vercel.app/shivam-727/profile"),
-          fetch("https://backendpoint-alpha.vercel.app/shivam-727/badges"),
+          fetch(`https://backendpoint-alpha.vercel.app/${username}/profile`),
+          fetch(`https://backendpoint-alpha.vercel.app/${username}/badges`),
         ]);
 
         if (!profileRes.ok || !badgesRes.ok)
-          throw new Error("Failed to fetch data");
+          throw new Error("Failed to fetch data (user may not exist or API is down)");
 
         const profileData = await profileRes.json();
         const badgesData = await badgesRes.json();
@@ -58,7 +78,7 @@ export default function LeetCodeStatsCard() {
     }
 
     fetchUser();
-  }, []);
+  }, [leetcodeUsername]); // 5. Depend on the prop
 
   if (loading)
     return <div className="text-gray-400 text-sm p-5">Loading LeetCode stats...</div>;

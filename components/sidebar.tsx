@@ -45,7 +45,7 @@ export default function Sidebar() {
 
         {/* Profile */}
         <button
-          onClick={() => router.push("/profile")}
+          onClick={() => router.push("/connections")}
           className="h-12 w-12 flex items-center justify-center bg-zinc-900 rounded-xl hover:bg-zinc-800 active:scale-95 transition border border-zinc-700"
           title="Profile"
         >
@@ -54,7 +54,7 @@ export default function Sidebar() {
 
         {/* Projects */}
         <button
-          onClick={() => router.push("/projects")}
+          onClick={() => router.push("/timeline")}
           className="h-12 w-12 flex items-center justify-center bg-zinc-900 rounded-xl hover:bg-zinc-800 active:scale-95 transition border border-zinc-700"
           title="Projects"
         >

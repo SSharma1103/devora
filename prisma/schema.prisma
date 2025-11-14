@@ -24,6 +24,8 @@ model User {
   pdata     Pdata?
   projects  Project[] @relation("UserProjects")
   workExp   WorkExp[] @relation("UserWorkExp")
+  following Follow[] @relation("Following")
+  followers Follow[] @relation("Followers")
 }
 
 model Gitdata {
@@ -63,6 +65,7 @@ model WorkExp {
   image       String?
   userId      Int?
   user        User?   @relation("UserWorkExp", fields: [userId], references: [id])
+  createdAt   DateTime @default(now()) 
 }
 
 model Project {
@@ -73,4 +76,20 @@ model Project {
   gitlink     String?
   userId      Int?
   user        User?   @relation("UserProjects", fields: [userId], references: [id])
+  createdAt   DateTime @default(now()) 
+}
+
+model Follow {
+  followerId  Int
+  followingId Int
+  createdAt   DateTime @default(now())
+
+  // --- Define relations ---
+  follower    User @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  // --- Define a composite primary key ---
+  @@id([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
 }

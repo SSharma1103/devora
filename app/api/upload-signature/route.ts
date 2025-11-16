@@ -1,3 +1,4 @@
+// app/api/upload-signature/route.ts
 import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
 
@@ -5,7 +6,7 @@ import { NextResponse } from "next/server";
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
   api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
-  api_secret: process.env.NEXT_PUBLIC_CLOUDINARY_API_SECRET,
+  api_secret: process.env.CLOUDINARY_API_SECRET, // 👈 FIX #1: Use the private env variable
   secure: true,
 });
 
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
     // Get the signature from Cloudinary
     const signature = cloudinary.utils.api_sign_request(
       paramsToSign,
-      process.env.NEXT_PUBLIC_CLOUDINARY_API_SECRET as string
+      process.env.CLOUDINARY_API_SECRET as string // 👈 FIX #2: Use the private env variable
     );
 
     return NextResponse.json({ signature });

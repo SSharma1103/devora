@@ -1,4 +1,4 @@
-// In components/UpdateProfileForm.tsx
+// components/UpdateProfileForm.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -45,7 +45,7 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
   const [uploading, setUploading] = useState(false);
 
 
-  // Fetch existing pdata on mount (as you already do)
+  // Fetch existing pdata on mount
   useEffect(() => {
     async function fetchData() {
       try {
@@ -85,14 +85,14 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
     }));
   }
 
-  // --- New Function: Handle File Upload to Cloudinary ---
+  // --- Updated: Handle File Upload to Cloudinary ---
   const handleFileUpload = async (file: File): Promise<string | null> => {
     try {
       // 1. Get signature from our new API route
       const timestamp = Math.round(new Date().getTime() / 1000);
       const paramsToSign = {
         timestamp: timestamp,
-        upload_preset: "devora_uploads", // Create an "unsigned" preset in Cloudinary
+        upload_preset: "devora_uploads", // This must match your preset
       };
 
       const sigRes = await fetch("/api/upload-signature", {
@@ -104,10 +104,13 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
       // 2. Prepare FormData for Cloudinary
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("api_key", process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY as string); // Note: Use NEXT_PUBLIC_ for client-side env var
       formData.append("timestamp", timestamp.toString());
       formData.append("signature", signature);
-      formData.append("upload_preset", "YOUR_UPLOAD_PRESET"); // Must match preset used for signing
+      formData.append("upload_preset", "devora_uploads"); // Must match preset used for signing
+      
+      // ❗️ FIX: The api_key is required for signed uploads
+      formData.append("api_key", process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY as string); 
+
 
       // 3. Make the upload POST to Cloudinary
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME as string;
@@ -119,7 +122,10 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
       });
 
       if (!uploadRes.ok) {
-        throw new Error("Cloudinary upload failed");
+        // Log the error response from Cloudinary for debugging
+        const errorData = await uploadRes.json();
+        console.error("Cloudinary upload failed:", errorData);
+        throw new Error(`Cloudinary upload failed: ${errorData.error.message}`);
       }
 
       const uploadData = await uploadRes.json();
@@ -154,6 +160,12 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
         if (newBannerUrl) setBannerUrl(newBannerUrl); // Save for the next step
       }
       setUploading(false);
+      
+      // If an upload failed, handleFileUpload will set the error and return null.
+      // We should stop submission if an error occurred during upload.
+      if ((pfpFile && !newPfpUrl) || (bannerFile && !newBannerUrl)) {
+          throw new Error(error || "Image upload failed. Please try again.");
+      }
 
       // --- 2. Update Pdata (About, Socials, etc.) ---
       const pdataRes = await fetch("/api/pdata", {
@@ -193,11 +205,6 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
       setUploading(false);
     }
   }
-
-  // --- Add .env variables for client-side ---
-  // You must create a .env.local file with these *public* variables
-  // NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="YOUR_CLOUD_NAME"
-  // NEXT_PUBLIC_CLOUDINARY_API_KEY="YOUR_API_KEY"
 
   return (
     <div className="fixed inset-0 backdrop-blur-md bg-black/40 flex items-center justify-center z-50 p-4">

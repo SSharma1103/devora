@@ -207,136 +207,145 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
   }
 
   return (
-    <div className="fixed inset-0 backdrop-blur-md bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-black rounded-2xl w-full max-w-md p-8 border border-gray-800 shadow-lg relative max-h-[90vh] overflow-y-auto">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-gray-400 hover:text-white text-xl"
-        >
-          ✕
-        </button>
+  <div className="fixed inset-0 backdrop-blur-md bg-black/40 flex items-center justify-center z-50 p-2">
+    <div className="bg-black rounded-2xl w-full max-w-6xl p-6 border border-gray-800 shadow-xl relative">
 
-        <h2 className="text-2xl font-semibold mb-6 text-center">
-          Update Profile
-        </h2>
+      {/* Close */}
+      <button
+        onClick={onClose}
+        className="absolute top-3 right-3 text-gray-400 hover:text-white text-xl"
+      >
+        ✕
+      </button>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* --- New File Inputs --- */}
-          <div className="mb-4">
-            <label htmlFor="pfp" className="block mb-2 text-sm text-gray-300">
-              Profile Picture
-            </label>
+      <h2 className="text-2xl font-semibold mb-6 text-center">
+        Update Profile
+      </h2>
+
+      {/* === NEW: 3 COLUMN GRID === */}
+      <form onSubmit={handleSubmit} className="grid grid-cols-3 gap-4">
+
+        {/* COLUMN 1 — Images */}
+        <div className="space-y-4">
+          <div className="p-4 border border-gray-800 rounded-xl bg-black/40">
+            <h3 className="text-gray-300 font-medium mb-3 text-base">Images</h3>
+
+            <label className="block mb-1 text-sm text-gray-400">Profile Picture</label>
             <input
               type="file"
-              id="pfp"
               accept="image/*"
               onChange={(e) => setPfpFile(e.target.files ? e.target.files[0] : null)}
-              className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-700 file:text-white hover:file:bg-gray-600"
+              className="w-full text-sm text-gray-300 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-gray-700 hover:file:bg-gray-600"
             />
-          </div>
 
-          <div className="mb-4">
-            <label htmlFor="banner" className="block mb-2 text-sm text-gray-300">
-              Banner Image
-            </label>
+            <label className="block mt-4 mb-1 text-sm text-gray-400">Banner Image</label>
             <input
               type="file"
-              id="banner"
               accept="image/*"
               onChange={(e) => setBannerFile(e.target.files ? e.target.files[0] : null)}
-              className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-700 file:text-white hover:file:bg-gray-600"
-            />
-          </div>
-
-          {/* --- Existing Fields --- */}
-          <div className="mb-4">
-            <label htmlFor="about" className="block mb-2 text-sm text-gray-300">
-              About You
-            </label>
-            <textarea
-              name="about"
-              id="about"
-              value={formData.about}
-              onChange={handleChange}
-              className="w-full p-3 rounded-lg bg-black border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              rows={3}
-              placeholder="Write a short bio..."
-            />
-          </div>
-
-          {/* Developer Stats */}
-          <div className="mb-4">
-            <label
-              htmlFor="devstats"
-              className="block mb-2 text-sm text-gray-300"
-            >
-              Developer Stats
-            </label>
-            <textarea
-              name="devstats"
-              id="devstats"
-              value={formData.devstats}
-              onChange={handleChange}
-              className="w-full p-3 rounded-lg bg-black border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              rows={3}
-              placeholder="e.g., 🚀 25+ Projects | 💻 2000+ Commits | 🌟 100+ Stars"
+              className="w-full text-sm text-gray-300 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-gray-700 hover:file:bg-gray-600"
             />
           </div>
 
           {/* Tech Stack */}
-          <div className="mb-4">
-            <label htmlFor="stack" className="block mb-2 text-sm text-gray-300">
-              Tech Stack
-            </label>
-            <input
-              type="text"
+          <div className="p-4 border border-gray-800 rounded-xl bg-black/40">
+            <h3 className="text-gray-300 font-medium mb-3 text-base">Tech Stack</h3>
+            <textarea
               name="stack"
-              id="stack"
               value={formData.stack}
               onChange={handleChange}
-              className="w-full p-3 rounded-lg bg-black border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Next.js, TypeScript, Prisma, TailwindCSS"
+              className="w-full p-2 rounded-lg bg-black border border-gray-700"
+              placeholder="Next.js, TS, Prisma, TailwindCSS"
+              rows={4}
+            />
+          </div>
+        </div>
+
+        {/* COLUMN 2 — About + DevStats */}
+        <div className="space-y-4">
+          <div className="p-4 border border-gray-800 rounded-xl bg-black/40">
+            <h3 className="text-gray-300 text-base font-medium mb-3">About You</h3>
+            <textarea
+              name="about"
+              value={formData.about}
+              onChange={handleChange}
+              className="w-full p-2 rounded-lg bg-black border border-gray-700 resize-none"
+              rows={4}
             />
           </div>
 
-          {/* Social Links */}
-          <div className="mb-6">
-            <label className="block mb-2 text-sm text-gray-300">
-              Social Links
-            </label>
+          <div className="p-4 border border-gray-800 rounded-xl bg-black/40">
+            <h3 className="text-gray-300 text-base font-medium mb-3">Developer Stats</h3>
+            <textarea
+              name="devstats"
+              value={formData.devstats}
+              onChange={handleChange}
+              className="w-full p-2 rounded-lg bg-black border border-gray-700 resize-none"
+              rows={4}
+            />
+          </div>
+        </div>
+
+        {/* COLUMN 3 — Socials + Submit */}
+        <div className="space-y-4">
+          <div className="p-4 border border-gray-800 rounded-xl bg-black/40">
+            <h3 className="text-gray-300 font-medium mb-3 text-base">Social Profiles</h3>
+
             <div className="space-y-2">
-              <input type="url" name="github" value={formData.socials.github} onChange={handleSocialChange} placeholder="GitHub URL" className="w-full p-3 rounded-lg bg-black border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <input type="url" name="linkedin" value={formData.socials.linkedin} onChange={handleSocialChange} placeholder="LinkedIn URL" className="w-full p-3 rounded-lg bg-black border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <input type="url" name="twitter" value={formData.socials.twitter} onChange={handleSocialChange} placeholder="Twitter URL" className="w-full p-3 rounded-lg bg-black border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <input type="url" name="portfolio" value={formData.socials.portfolio} onChange={handleSocialChange} placeholder="Portfolio URL" className="w-full p-3 rounded-lg bg-black border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <input
+                type="url"
+                name="github"
+                value={formData.socials.github}
+                onChange={handleSocialChange}
+                placeholder="GitHub URL"
+                className="w-full p-2 rounded-lg bg-black border border-gray-700"
+              />
+              <input
+                type="url"
+                name="linkedin"
+                value={formData.socials.linkedin}
+                onChange={handleSocialChange}
+                placeholder="LinkedIn URL"
+                className="w-full p-2 rounded-lg bg-black border border-gray-700"
+              />
+              <input
+                type="url"
+                name="twitter"
+                value={formData.socials.twitter}
+                onChange={handleSocialChange}
+                placeholder="Twitter URL"
+                className="w-full p-2 rounded-lg bg-black border border-gray-700"
+              />
+              <input
+                type="url"
+                name="portfolio"
+                value={formData.socials.portfolio}
+                onChange={handleSocialChange}
+                placeholder="Portfolio URL"
+                className="w-full p-2 rounded-lg bg-black border border-gray-700"
+              />
             </div>
           </div>
 
+          {/* Status / Submit */}
+          <div className=" mt-full space-y-1">
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {success && <p className="text-green-500 text-sm">Profile updated successfully!</p>}
+            {uploading && <p className="text-blue-400 text-sm">Uploading images...</p>}
 
-          {/* Status Messages */}
-          {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
-          {success && (
-            <p className="text-green-500 text-sm mb-3">
-              Profile updated successfully!
-            </p>
-          )}
-          {uploading && (
-            <p className="text-blue-400 text-sm mb-3">
-              Uploading images...
-            </p>
-          )}
+            <button
+              type="submit"
+              disabled={loading || uploading}
+              className="w-full bg-gray-600 hover:bg-blue-500 text-white font-semibold py-2 rounded-xl transition disabled:opacity-50"
+            >
+              {loading ? "Saving..." : "Update Profile"}
+            </button>
+          </div>
+        </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading || uploading}
-            className="w-full bg-gray-600 hover:bg-gray-500 text-white font-semibold py-3 rounded-lg transition active:scale-95 disabled:opacity-50"
-          >
-            {loading ? "Saving..." : "Update Info"}
-          </button>
-        </form>
-      </div>
+      </form>
     </div>
-  );
+  </div>
+);
+
 }

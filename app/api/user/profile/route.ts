@@ -12,16 +12,26 @@ export async function PATCH(request: Request) {
 
     const userId = parseInt(session.userId);
     const body = await request.json();
-    const { pfp, banner } = body;
+    // 1. Destructure 'name' from the body
+    const { pfp, banner, name } = body;
 
     // Validate that we are only receiving strings
-    const dataToUpdate: { pfp?: string; banner?: string } = {};
+    // 2. Add 'name' to the dataToUpdate object
+    const dataToUpdate: { pfp?: string; banner?: string; name?: string } = {};
     if (typeof pfp === 'string') {
       dataToUpdate.pfp = pfp;
     }
     if (typeof banner === 'string') {
       dataToUpdate.banner = banner;
     }
+    // 3. Add name validation and update logic
+    if (typeof name === 'string') {
+      if (name.trim().length === 0) {
+        return NextResponse.json({ error: "Name cannot be empty" }, { status: 400 });
+      }
+      dataToUpdate.name = name.trim();
+    }
+
 
     if (Object.keys(dataToUpdate).length === 0) {
        return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });

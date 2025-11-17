@@ -44,7 +44,7 @@ export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
       // 3. Determine username
       //    If prop is provided (public profile), use it.
       //    If prop is undefined (dashboard), use the hardcoded username.
-      const username = leetcodeUsername === undefined ? "shivam-727" : leetcodeUsername;
+      const username = leetcodeUsername ;
 
       // 4. If username is null or empty, don't fetch.
       if (!username) {

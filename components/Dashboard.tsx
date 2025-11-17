@@ -18,7 +18,7 @@ export default function Dashboard() {
       {/* ===== Banner + Profile Header Section ===== */}
       <div className="relative w-full">
         {/* Banner */}
-        <div className="w-full h-40 bg-gradient-to-r from-gray-700 via-gray-800 to-black" />
+        <div className="w-full h-40 bg-linear-to-r from-gray-700 via-gray-800 to-black" />
 
         {/* Profile Picture */}
         <div className="absolute left-10 -bottom-10">

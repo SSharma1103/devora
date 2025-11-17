@@ -17,6 +17,7 @@ interface PdataForm {
     linkedin: string;
     twitter: string;
     portfolio: string;
+    leetcode: string; // <-- 1. Added leetcode
   };
 }
 
@@ -30,7 +31,13 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
     about: "",
     devstats: "",
     stack: "",
-    socials: { github: "", linkedin: "", twitter: "", portfolio: "" },
+    socials: {
+      github: "",
+      linkedin: "",
+      twitter: "",
+      portfolio: "",
+      leetcode: "", // <-- 2. Initialized leetcode
+    },
   });
 
   // --- New State for Image Uploads ---
@@ -44,7 +51,6 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
   // State for upload progress
   const [uploading, setUploading] = useState(false);
 
-
   // Fetch existing pdata on mount
   useEffect(() => {
     async function fetchData() {
@@ -54,11 +60,19 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
         const data = await res.json();
 
         if (data?.data) {
+          // 3. Updated to merge existing socials with the full default object
           setFormData({
             about: data.data.about || "",
             devstats: data.data.devstats || "",
             stack: data.data.stack || "",
-            socials: data.data.socials || { github: "", linkedin: "", twitter: "", portfolio: "" },
+            socials: {
+              github: "",
+              linkedin: "",
+              twitter: "",
+              portfolio: "",
+              leetcode: "",
+              ...(data.data.socials || {}), // Spread existing socials to override defaults
+            },
           });
         }
       } catch (err: any) {
@@ -324,6 +338,15 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
                 placeholder="Portfolio URL"
                 className="w-full p-2 rounded-lg bg-black border border-gray-700"
               />
+              {/* 4. Added LeetCode Input */}
+              <input
+                type="text"
+                name="leetcode"
+                value={formData.socials.leetcode}
+                onChange={handleSocialChange}
+                placeholder="LeetCode Username or URL"
+                className="w-full p-2 rounded-lg bg-black border border-gray-700"
+              />
             </div>
           </div>
 
@@ -347,5 +370,4 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
     </div>
   </div>
 );
-
 }

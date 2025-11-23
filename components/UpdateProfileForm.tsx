@@ -33,6 +33,9 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
     socials: { github: "", linkedin: "", twitter: "", portfolio: "" },
   });
 
+  // State for User Schema fields (LeetCode)
+  const [leetcodeUsername, setLeetcodeUsername] = useState("");
+
   // --- New State for Image Uploads ---
   const [pfpFile, setPfpFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -45,24 +48,35 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
   const [uploading, setUploading] = useState(false);
 
 
-  // Fetch existing pdata on mount
+  // Fetch existing data on mount
   useEffect(() => {
     async function fetchData() {
       try {
+        // 1. Fetch Pdata
         const res = await fetch("/api/pdata");
-        if (!res.ok) throw new Error("Failed to load personal data");
-        const data = await res.json();
-
-        if (data?.data) {
-          setFormData({
-            about: data.data.about || "",
-            devstats: data.data.devstats || "",
-            stack: data.data.stack || "",
-            socials: data.data.socials || { github: "", linkedin: "", twitter: "", portfolio: "" },
-          });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.data) {
+            setFormData({
+              about: data.data.about || "",
+              devstats: data.data.devstats || "",
+              stack: data.data.stack || "",
+              socials: data.data.socials || { github: "", linkedin: "", twitter: "", portfolio: "" },
+            });
+          }
         }
+
+        // 2. Fetch User Profile (for LeetCode)
+        const userRes = await fetch("/api/user/profile");
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          if (userData?.data?.leetcode) {
+            setLeetcodeUsername(userData.data.leetcode);
+          }
+        }
+
       } catch (err: any) {
-        setError(err.message);
+        setError(err.message || "Failed to load data");
       }
     }
     fetchData();
@@ -176,10 +190,15 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
       const pdataData = await pdataRes.json();
       if (!pdataRes.ok) throw new Error(pdataData.error || "Failed to update personal data");
 
-      // --- 3. Update User (pfp, banner) ---
-      const profileUpdateData: { pfp?: string; banner?: string } = {};
+      // --- 3. Update User (pfp, banner, leetcode) ---
+      const profileUpdateData: { pfp?: string; banner?: string; leetcode?: string } = {};
       if (newPfpUrl) profileUpdateData.pfp = newPfpUrl;
       if (newBannerUrl) profileUpdateData.banner = newBannerUrl;
+      
+      // Always include leetcode if state is set (or empty string to clear it)
+      if (leetcodeUsername !== undefined) {
+        profileUpdateData.leetcode = leetcodeUsername;
+      }
 
       if (Object.keys(profileUpdateData).length > 0) {
         const userRes = await fetch("/api/user/profile", {
@@ -188,7 +207,7 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
           body: JSON.stringify(profileUpdateData),
         });
         const userData = await userRes.json();
-        if (!userRes.ok) throw new Error(userData.error || "Failed to update profile image");
+        if (!userRes.ok) throw new Error(userData.error || "Failed to update user profile");
       }
 
       // --- 4. Success ---
@@ -208,7 +227,7 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
 
   return (
   <div className="fixed inset-0 backdrop-blur-md bg-black/40 flex items-center justify-center z-50 p-2">
-    <div className="bg-black rounded-2xl w-full max-w-6xl p-6 border border-gray-800 shadow-xl relative">
+    <div className="bg-black rounded-2xl w-full max-w-6xl p-6 border border-gray-800 shadow-xl relative h-[90vh] overflow-y-auto">
 
       {/* Close */}
       <button
@@ -223,7 +242,7 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
       </h2>
 
       {/* === NEW: 3 COLUMN GRID === */}
-      <form onSubmit={handleSubmit} className="grid grid-cols-3 gap-4">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
         {/* COLUMN 1 — Images */}
         <div className="space-y-4">
@@ -254,7 +273,7 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
               name="stack"
               value={formData.stack}
               onChange={handleChange}
-              className="w-full p-2 rounded-lg bg-black border border-gray-700"
+              className="w-full p-2 rounded-lg bg-black border border-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-600"
               placeholder="Next.js, TS, Prisma, TailwindCSS"
               rows={4}
             />
@@ -269,8 +288,8 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
               name="about"
               value={formData.about}
               onChange={handleChange}
-              className="w-full p-2 rounded-lg bg-black border border-gray-700 resize-none"
-              rows={4}
+              className="w-full p-2 rounded-lg bg-black border border-gray-700 resize-none focus:outline-none focus:ring-1 focus:ring-blue-600"
+              rows={6}
             />
           </div>
 
@@ -280,7 +299,8 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
               name="devstats"
               value={formData.devstats}
               onChange={handleChange}
-              className="w-full p-2 rounded-lg bg-black border border-gray-700 resize-none"
+              className="w-full p-2 rounded-lg bg-black border border-gray-700 resize-none focus:outline-none focus:ring-1 focus:ring-blue-600"
+              placeholder="Years of experience, projects built, etc."
               rows={4}
             />
           </div>
@@ -291,14 +311,21 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
           <div className="p-4 border border-gray-800 rounded-xl bg-black/40">
             <h3 className="text-gray-300 font-medium mb-3 text-base">Social Profiles</h3>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
+              <input
+                type="text"
+                value={leetcodeUsername}
+                onChange={(e) => setLeetcodeUsername(e.target.value)}
+                placeholder="LeetCode Username"
+                className="w-full p-2 rounded-lg bg-black border border-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-600"
+              />
               <input
                 type="url"
                 name="github"
                 value={formData.socials.github}
                 onChange={handleSocialChange}
                 placeholder="GitHub URL"
-                className="w-full p-2 rounded-lg bg-black border border-gray-700"
+                className="w-full p-2 rounded-lg bg-black border border-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-600"
               />
               <input
                 type="url"
@@ -306,7 +333,7 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
                 value={formData.socials.linkedin}
                 onChange={handleSocialChange}
                 placeholder="LinkedIn URL"
-                className="w-full p-2 rounded-lg bg-black border border-gray-700"
+                className="w-full p-2 rounded-lg bg-black border border-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-600"
               />
               <input
                 type="url"
@@ -314,7 +341,7 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
                 value={formData.socials.twitter}
                 onChange={handleSocialChange}
                 placeholder="Twitter URL"
-                className="w-full p-2 rounded-lg bg-black border border-gray-700"
+                className="w-full p-2 rounded-lg bg-black border border-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-600"
               />
               <input
                 type="url"
@@ -322,21 +349,21 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
                 value={formData.socials.portfolio}
                 onChange={handleSocialChange}
                 placeholder="Portfolio URL"
-                className="w-full p-2 rounded-lg bg-black border border-gray-700"
+                className="w-full p-2 rounded-lg bg-black border border-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-600"
               />
             </div>
           </div>
 
           {/* Status / Submit */}
-          <div className=" mt-full space-y-1">
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            {success && <p className="text-green-500 text-sm">Profile updated successfully!</p>}
+          <div className="mt-4 space-y-2">
+            {error && <p className="text-red-500 text-sm bg-red-900/20 p-2 rounded border border-red-800">{error}</p>}
+            {success && <p className="text-green-500 text-sm bg-green-900/20 p-2 rounded border border-green-800">Profile updated successfully!</p>}
             {uploading && <p className="text-blue-400 text-sm">Uploading images...</p>}
 
             <button
               type="submit"
               disabled={loading || uploading}
-              className="w-full bg-gray-600 hover:bg-blue-500 text-white font-semibold py-2 rounded-xl transition disabled:opacity-50"
+              className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20"
             >
               {loading ? "Saving..." : "Update Profile"}
             </button>

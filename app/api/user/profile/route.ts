@@ -3,6 +3,37 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+export async function GET(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = parseInt(session.userId);
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        pfp: true,
+        banner: true,
+        leetcode: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, data: user });
+  } catch (err: any) {
+    console.error("Error fetching user profile:", err);
+    return NextResponse.json(
+      { error: "Failed to fetch profile", message: err.message },
+      { status: 500 }
+    );
+  }
+}
+
 export async function PATCH(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -12,26 +43,19 @@ export async function PATCH(request: Request) {
 
     const userId = parseInt(session.userId);
     const body = await request.json();
-    // 1. Destructure 'name' from the body
-    const { pfp, banner, name } = body;
+    const { pfp, banner, leetcode } = body;
 
     // Validate that we are only receiving strings
-    // 2. Add 'name' to the dataToUpdate object
-    const dataToUpdate: { pfp?: string; banner?: string; name?: string } = {};
+    const dataToUpdate: { pfp?: string; banner?: string; leetcode?: string } = {};
     if (typeof pfp === 'string') {
       dataToUpdate.pfp = pfp;
     }
     if (typeof banner === 'string') {
       dataToUpdate.banner = banner;
     }
-    // 3. Add name validation and update logic
-    if (typeof name === 'string') {
-      if (name.trim().length === 0) {
-        return NextResponse.json({ error: "Name cannot be empty" }, { status: 400 });
-      }
-      dataToUpdate.name = name.trim();
+    if (typeof leetcode === 'string') {
+      dataToUpdate.leetcode = leetcode;
     }
-
 
     if (Object.keys(dataToUpdate).length === 0) {
        return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });

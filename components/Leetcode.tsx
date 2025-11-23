@@ -1,7 +1,8 @@
-//[copy:ssharma1103/devora/devora-b7321077cd9d75e6fb001acbeaa36d22b960d15c/components/Leetcode.tsx]
+//[copy:ssharma1103/devora/devora-abc49a529e9b35857e5ebd2022fe0322d0edcfe8/components/Leetcode.tsx]
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { BarChart3, Trophy, TrendingUp, Award } from "lucide-react";
 
 function Stat({ label, value }: { label: string; value: number }) {
@@ -27,13 +28,12 @@ function ProgressBar({ progress }: { progress: number }) {
   );
 }
 
-// 1. Add Props interface
 interface LeetCodeProps {
   leetcodeUsername?: string | null;
 }
 
-// 2. Accept props
 export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
+  const { data: session } = useSession();
   const [data, setData] = useState<any>(null);
   const [badgesData, setBadgesData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -41,20 +41,40 @@ export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
 
   useEffect(() => {
     async function fetchUser() {
-      // 3. Determine username
-      //    If prop is provided (public profile), use it.
-      //    If prop is undefined (dashboard), use the hardcoded username.
-      const username = leetcodeUsername ;
+      let username = leetcodeUsername;
 
-      // 4. If username is null or empty, don't fetch.
+      // If prop is undefined (e.g. Dashboard), fetch from logged-in user's profile via API
+      if (username === undefined && session?.username) {
+        try {
+          const res = await fetch(`/api/user?username=${session.username}`);
+          if (res.ok) {
+            const json = await res.json();
+            if (json.success && json.data) {
+              // Fetch directly from the User model field
+              username = json.data.leetcode; 
+            }
+          }
+        } catch (err) {
+          console.error("Failed to fetch user profile:", err);
+        }
+      }
+
+      // If username is still missing (null prop or not in DB)
       if (!username) {
         setLoading(false);
-        setError("No LeetCode username provided.");
+        // If explicit null passed (profile view of user without LC), or DB empty
+        if (leetcodeUsername === null) {
+           // Intentionally silent or specific message if needed, but usually handled by parent
+           setError("No LeetCode username found for this user.");
+        } else {
+           // Dashboard case but empty
+           setError(null); // Just show "No data found" state (handled by !data check below)
+        }
         return;
       }
 
       try {
-        // setLoading(true); // Moved from outside try
+        setLoading(true);
         const [profileRes, badgesRes] = await Promise.all([
           fetch(`https://backendpoint-alpha.vercel.app/${username}/profile`),
           fetch(`https://backendpoint-alpha.vercel.app/${username}/badges`),
@@ -68,8 +88,7 @@ export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
 
         setData(profileData);
         setBadgesData(badgesData);
-        console.log(profileData)
-        console.log(badgesData)
+        setError(null);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -77,32 +96,35 @@ export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
       }
     }
 
-    fetchUser();
-  }, [leetcodeUsername]); // 5. Depend on the prop
+    // Only run when we have a definite state for leetcodeUsername or session is loaded
+    if (leetcodeUsername !== undefined || session?.username) {
+        fetchUser();
+    } else if (leetcodeUsername === undefined && session === null) {
+        // Not logged in and no prop? Stop loading.
+        setLoading(false);
+    }
+  }, [leetcodeUsername, session]);
 
   if (loading)
     return <div className="text-gray-400 text-sm p-5">Loading LeetCode stats...</div>;
+  
   if (error)
-    return <div className="text-red-500 text-sm p-5">Error: {error}</div>;
+    return <div className="text-red-500 text-sm p-5">{error}</div>;
+  
   if (!data)
     return <div className="text-gray-400 text-sm p-5">No LeetCode data found</div>;
 
   // derived values
   const totalSolved = data.easySolved + data.mediumSolved + data.hardSolved;
-  const easyPercent = Math.round((data.easySolved / data.totalEasy) * 100);
-  const mediumPercent = Math.round((data.mediumSolved / data.totalMedium) * 100);
-  const hardPercent = Math.round((data.hardSolved / data.totalHard) * 100);
-  const progressOverall = Math.min(
-    Math.round(
-      (totalSolved /
-        (data.totalEasy + data.totalMedium + data.totalHard)) *
-        100
-    ),
-    100
-  );
+  const easyPercent = data.totalEasy ? Math.round((data.easySolved / data.totalEasy) * 100) : 0;
+  const mediumPercent = data.totalMedium ? Math.round((data.mediumSolved / data.totalMedium) * 100) : 0;
+  const hardPercent = data.totalHard ? Math.round((data.hardSolved / data.totalHard) * 100) : 0;
+  
+  const totalQuestions = data.totalEasy + data.totalMedium + data.totalHard;
+  const progressOverall = totalQuestions > 0 ? Math.min(Math.round((totalSolved / totalQuestions) * 100), 100) : 0;
 
   return (
-    <div className="flex flex-row bg-black border border-gray-800 rounded-xl m-5 p-3 justify-start space-x-4">
+    <div className="flex flex-row bg-black border border-gray-800 rounded-xl  p-3 justify-start space-x-4">
       {/* Card 1 - LeetCode Stats */}
       <div className="w-80 bg-black border border-gray-800 rounded-xl p-3 flex flex-col space-y-4 hover:border-gray-600 transition">
         <div className="flex items-center justify-between">
@@ -157,34 +179,34 @@ export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
 
       {/* Card 3 - Badges (Top 9 by name only) */}
       <div className="w-64 bg-black border border-gray-800 rounded-xl p-3 flex flex-col space-y-3 hover:border-gray-600 transition">
-  <div className="flex items-center justify-between">
-    <h2 className="text-gray-100 font-medium text-base">Badges</h2>
-    <Award className="text-purple-400 h-4 w-4 opacity-80" />
-  </div>
+        <div className="flex items-center justify-between">
+          <h2 className="text-gray-100 font-medium text-base">Badges</h2>
+          <Award className="text-purple-400 h-4 w-4 opacity-80" />
+        </div>
 
-  {badgesData?.badges && Array.isArray(badgesData.badges) ? (
-    badgesData.badges.length > 0 ? (
-      <div className="grid grid-cols-2 gap-2">
-        {badgesData.badges.slice(0, 9).map((badge: any) => (
-          <div
-            key={badge.id}
-            className={`flex items-center justify-center text-center bg-black border border-gray-800 px-2 py-2 rounded-md text-[11px] text-gray-300 hover:border-gray-600 transition ${
-              badgesData.activeBadge?.id === badge.id
-                ? "border-yellow-400 text-yellow-300"
-                : ""
-            }`}
-          >
-            {badge.displayName}
-          </div>
-        ))}
+        {badgesData?.badges && Array.isArray(badgesData.badges) ? (
+          badgesData.badges.length > 0 ? (
+            <div className="grid grid-cols-2 gap-2">
+              {badgesData.badges.slice(0, 9).map((badge: any) => (
+                <div
+                  key={badge.id}
+                  className={`flex items-center justify-center text-center bg-black border border-gray-800 px-2 py-2 rounded-md text-[11px] text-gray-300 hover:border-gray-600 transition ${
+                    badgesData.activeBadge?.id === badge.id
+                      ? "border-yellow-400 text-yellow-300"
+                      : ""
+                  }`}
+                >
+                  {badge.displayName}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-gray-500 text-xs">No badges found</div>
+          )
+        ) : (
+          <div className="text-gray-500 text-xs">Loading badges...</div>
+        )}
       </div>
-    ) : (
-      <div className="text-gray-500 text-xs">No badges found</div>
-    )
-  ) : (
-    <div className="text-gray-500 text-xs">Loading badges...</div>
-  )}
-</div>
     </div>
   );
 }

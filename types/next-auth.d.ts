@@ -7,8 +7,13 @@ declare module "next-auth" {
     accessToken?: string;
     hasGitHub?: boolean;
     hasGoogle?: boolean;
+    user: {
+      banner?: string | null;
+      id?: string;
+    } & DefaultSession["user"];
   }
-}
+  }
+
 
 declare module "next-auth/jwt" {
   interface JWT {

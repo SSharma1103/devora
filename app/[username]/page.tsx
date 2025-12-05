@@ -66,13 +66,13 @@ export default function UserProfilePage() {
   }, [username]);
 
   return (
-    <div className="flex bg-black text-white min-h-screen">
+    <div className="flex bg-black text-[#E9E6D7] min-h-screen">
       <Sidebar />
 
       <main className="flex-1 ml-20 p-8 overflow-y-auto">
         {loading && (
           <div className="flex justify-center items-center h-64">
-            <Loader2 className="animate-spin h-8 w-8 text-gray-400" />
+            <Loader2 className="animate-spin h-8 w-8 text-[#E9E6D7]" />
           </div>
         )}
 
@@ -94,7 +94,7 @@ export default function UserProfilePage() {
 
             {/* 2. Main Content Area */}
             <div className="mt-20">
-              <main className="flex-1 bg-black min-h-screen text-white">
+              <main className="flex-1 bg-black min-h-screen text-[#E9E6D7]">
                 <div className="flex justify-start">
                   <div className="pt- max-w-4xl">
                     {/* Render read-only components, passing fetched data as props */}

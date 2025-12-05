@@ -1,13 +1,23 @@
-// components/UpdateProfileForm.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { 
+  X, 
+  Upload, 
+  Github, 
+  Linkedin, 
+  Twitter, 
+  Globe, 
+  Code2, 
+  User, 
+  Cpu, 
+  Loader2 
+} from "lucide-react";
 
 interface UpdateProfileFormProps {
   onClose: () => void;
 }
 
-// Define the type for Pdata to match your form
 interface PdataForm {
   about: string;
   devstats: string;
@@ -33,26 +43,23 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
     socials: { github: "", linkedin: "", twitter: "", portfolio: "" },
   });
 
-  // State for User Schema fields (LeetCode)
+  // State for User Schema fields
   const [leetcodeUsername, setLeetcodeUsername] = useState("");
 
-  // --- New State for Image Uploads ---
+  // File Upload State
   const [pfpFile, setPfpFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
-
-  // Store the URLs after upload
   const [pfpUrl, setPfpUrl] = useState<string | null>(null);
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
-
-  // State for upload progress
   const [uploading, setUploading] = useState(false);
 
+  // Refs for custom file triggers
+  const pfpInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch existing data on mount
   useEffect(() => {
     async function fetchData() {
       try {
-        // 1. Fetch Pdata
         const res = await fetch("/api/pdata");
         if (res.ok) {
           const data = await res.json();
@@ -65,8 +72,6 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
             });
           }
         }
-
-        // 2. Fetch User Profile (for LeetCode)
         const userRes = await fetch("/api/user/profile");
         if (userRes.ok) {
           const userData = await userRes.json();
@@ -74,7 +79,6 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
             setLeetcodeUsername(userData.data.leetcode);
           }
         }
-
       } catch (err: any) {
         setError(err.message || "Failed to load data");
       }
@@ -82,7 +86,6 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
     fetchData();
   }, []);
 
-  // Handle standard form field change
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) {
@@ -90,7 +93,6 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   }
 
-  // Handle socials change
   function handleSocialChange(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -99,14 +101,12 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
     }));
   }
 
-  // --- Updated: Handle File Upload to Cloudinary ---
   const handleFileUpload = async (file: File): Promise<string | null> => {
     try {
-      // 1. Get signature from our new API route
       const timestamp = Math.round(new Date().getTime() / 1000);
       const paramsToSign = {
         timestamp: timestamp,
-        upload_preset: "devora_uploads", // This must match your preset
+        upload_preset: "devora_uploads",
       };
 
       const sigRes = await fetch("/api/upload-signature", {
@@ -115,18 +115,13 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
       });
       const { signature } = await sigRes.json();
 
-      // 2. Prepare FormData for Cloudinary
       const formData = new FormData();
       formData.append("file", file);
       formData.append("timestamp", timestamp.toString());
       formData.append("signature", signature);
-      formData.append("upload_preset", "devora_uploads"); // Must match preset used for signing
-      
-      // ❗️ FIX: The api_key is required for signed uploads
-      formData.append("api_key", process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY as string); 
+      formData.append("upload_preset", "devora_uploads");
+      formData.append("api_key", process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY as string);
 
-
-      // 3. Make the upload POST to Cloudinary
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME as string;
       const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
 
@@ -136,15 +131,12 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
       });
 
       if (!uploadRes.ok) {
-        // Log the error response from Cloudinary for debugging
         const errorData = await uploadRes.json();
-        console.error("Cloudinary upload failed:", errorData);
         throw new Error(`Cloudinary upload failed: ${errorData.error.message}`);
       }
 
       const uploadData = await uploadRes.json();
-      return uploadData.secure_url; // The URL of the uploaded image
-
+      return uploadData.secure_url;
     } catch (err: any) {
       console.error("File upload error:", err);
       setError(err.message || "Failed to upload image");
@@ -152,7 +144,6 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
     }
   };
 
-  // --- Modified Submit Handler ---
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -163,25 +154,21 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
     let newBannerUrl = null;
 
     try {
-      // --- 1. Handle File Uploads First ---
       setUploading(true);
       if (pfpFile) {
         newPfpUrl = await handleFileUpload(pfpFile);
-        if (newPfpUrl) setPfpUrl(newPfpUrl); // Save for the next step
+        if (newPfpUrl) setPfpUrl(newPfpUrl);
       }
       if (bannerFile) {
         newBannerUrl = await handleFileUpload(bannerFile);
-        if (newBannerUrl) setBannerUrl(newBannerUrl); // Save for the next step
+        if (newBannerUrl) setBannerUrl(newBannerUrl);
       }
       setUploading(false);
-      
-      // If an upload failed, handleFileUpload will set the error and return null.
-      // We should stop submission if an error occurred during upload.
+
       if ((pfpFile && !newPfpUrl) || (bannerFile && !newBannerUrl)) {
-          throw new Error(error || "Image upload failed. Please try again.");
+        throw new Error(error || "Image upload failed. Please try again.");
       }
 
-      // --- 2. Update Pdata (About, Socials, etc.) ---
       const pdataRes = await fetch("/api/pdata", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -190,12 +177,9 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
       const pdataData = await pdataRes.json();
       if (!pdataRes.ok) throw new Error(pdataData.error || "Failed to update personal data");
 
-      // --- 3. Update User (pfp, banner, leetcode) ---
       const profileUpdateData: { pfp?: string; banner?: string; leetcode?: string } = {};
       if (newPfpUrl) profileUpdateData.pfp = newPfpUrl;
       if (newBannerUrl) profileUpdateData.banner = newBannerUrl;
-      
-      // Always include leetcode if state is set (or empty string to clear it)
       if (leetcodeUsername !== undefined) {
         profileUpdateData.leetcode = leetcodeUsername;
       }
@@ -210,11 +194,10 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
         if (!userRes.ok) throw new Error(userData.error || "Failed to update user profile");
       }
 
-      // --- 4. Success ---
       setSuccess(true);
       setTimeout(() => {
         onClose();
-        window.location.reload(); // Refresh page to see changes
+        window.location.reload();
       }, 1000);
 
     } catch (err: any) {
@@ -225,154 +208,254 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
     }
   }
 
+  // --- Styles ---
+  const offWhite = "#E9E6D7";
+  // Reduced padding (p-2.5) and smaller text for compact feel
+  const inputBaseClasses = "w-full p-2.5 pl-9 bg-[#0a0a0a] border border-[#E9E6D7]/20 rounded-none focus:outline-none focus:border-[#E9E6D7] focus:ring-1 focus:ring-[#E9E6D7] transition-all text-[#E9E6D7] placeholder-[#E9E6D7]/30 text-sm";
+  const textareaClasses = "w-full p-2.5 bg-[#0a0a0a] border border-[#E9E6D7]/20 rounded-none focus:outline-none focus:border-[#E9E6D7] focus:ring-1 focus:ring-[#E9E6D7] transition-all text-[#E9E6D7] placeholder-[#E9E6D7]/30 text-sm resize-none";
+  const labelClasses = "block text-[10px] font-bold text-[#E9E6D7]/60 mb-1.5 uppercase tracking-wider";
+  
   return (
-  <div className="fixed inset-0 backdrop-blur-md bg-black/40 flex items-center justify-center z-50 p-2">
-    <div className="bg-black rounded-2xl w-full max-w-6xl p-6 border border-gray-800 shadow-xl relative h-[90vh] overflow-y-auto">
-
-      {/* Close */}
-      <button
-        onClick={onClose}
-        className="absolute top-3 right-3 text-gray-400 hover:text-white text-xl"
+    <div className="fixed inset-0 backdrop-blur-xl bg-black/80 flex items-center justify-center z-50 p-2 animate-in fade-in duration-200">
+      <div 
+        className="bg-[#050505] w-full max-w-5xl max-h-[95vh] overflow-y-auto border border-[#E9E6D7]/20 shadow-2xl relative flex flex-col"
+        style={{ boxShadow: '0 0 40px -10px rgba(233, 230, 215, 0.1)' }}
       >
-        ✕
-      </button>
-
-      <h2 className="text-2xl font-semibold mb-6 text-center">
-        Update Profile
-      </h2>
-
-      {/* === NEW: 3 COLUMN GRID === */}
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-        {/* COLUMN 1 — Images */}
-        <div className="space-y-4">
-          <div className="p-4 border border-gray-800 rounded-xl bg-black/40">
-            <h3 className="text-gray-300 font-medium mb-3 text-base">Images</h3>
-
-            <label className="block mb-1 text-sm text-gray-400">Profile Picture</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setPfpFile(e.target.files ? e.target.files[0] : null)}
-              className="w-full text-sm text-gray-300 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-gray-700 hover:file:bg-gray-600"
-            />
-
-            <label className="block mt-4 mb-1 text-sm text-gray-400">Banner Image</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setBannerFile(e.target.files ? e.target.files[0] : null)}
-              className="w-full text-sm text-gray-300 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-gray-700 hover:file:bg-gray-600"
-            />
+        
+        {/* Compact Header */}
+        <div className="sticky top-0 z-10 bg-[#050505]/95 backdrop-blur-md border-b border-[#E9E6D7]/10 px-5 py-3 flex items-center justify-between">
+          <div className="flex items-baseline gap-3">
+            <h2 className="text-lg font-bold tracking-tight" style={{ color: offWhite }}>
+              Edit Profile
+            </h2>
+            <p className="text-[10px] text-[#E9E6D7]/50 uppercase tracking-widest hidden sm:block">Update Persona</p>
           </div>
-
-          {/* Tech Stack */}
-          <div className="p-4 border border-gray-800 rounded-xl bg-black/40">
-            <h3 className="text-gray-300 font-medium mb-3 text-base">Tech Stack</h3>
-            <textarea
-              name="stack"
-              value={formData.stack}
-              onChange={handleChange}
-              className="w-full p-2 rounded-lg bg-black border border-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-600"
-              placeholder="Next.js, TS, Prisma, TailwindCSS"
-              rows={4}
-            />
-          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 hover:bg-[#E9E6D7]/10 rounded-full transition-colors text-[#E9E6D7]"
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        {/* COLUMN 2 — About + DevStats */}
-        <div className="space-y-4">
-          <div className="p-4 border border-gray-800 rounded-xl bg-black/40">
-            <h3 className="text-gray-300 text-base font-medium mb-3">About You</h3>
-            <textarea
-              name="about"
-              value={formData.about}
-              onChange={handleChange}
-              className="w-full p-2 rounded-lg bg-black border border-gray-700 resize-none focus:outline-none focus:ring-1 focus:ring-blue-600"
-              rows={6}
-            />
-          </div>
+        {/* Compact Body - Reduced padding and gaps */}
+        <form onSubmit={handleSubmit} className="flex-1 p-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            
+            {/* COLUMN 1: Visual Assets & Stack */}
+            <div className="space-y-5">
+              
+              {/* Image Uploaders - Now Side by Side */}
+              <div>
+                <h3 className={labelClasses}>Visual Assets</h3>
+                <div className="flex gap-3">
+                  {/* PFP Upload */}
+                  <div 
+                    onClick={() => pfpInputRef.current?.click()}
+                    className="group relative flex-1 h-24 border border-dashed border-[#E9E6D7]/30 hover:border-[#E9E6D7] transition-all cursor-pointer bg-[#0a0a0a] flex flex-col items-center justify-center gap-1.5"
+                  >
+                     <input
+                      ref={pfpInputRef}
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(e) => setPfpFile(e.target.files ? e.target.files[0] : null)}
+                    />
+                    <div className="p-1.5 bg-[#E9E6D7]/5 rounded-full group-hover:bg-[#E9E6D7] group-hover:text-black transition-colors text-[#E9E6D7]">
+                      <User size={16} />
+                    </div>
+                    <span className="text-[10px] text-[#E9E6D7]/60 group-hover:text-[#E9E6D7] truncate max-w-20">
+                      {pfpFile ? "Selected" : "Avatar"}
+                    </span>
+                  </div>
 
-          <div className="p-4 border border-gray-800 rounded-xl bg-black/40">
-            <h3 className="text-gray-300 text-base font-medium mb-3">Developer Stats</h3>
-            <textarea
-              name="devstats"
-              value={formData.devstats}
-              onChange={handleChange}
-              className="w-full p-2 rounded-lg bg-black border border-gray-700 resize-none focus:outline-none focus:ring-1 focus:ring-blue-600"
-              placeholder="Years of experience, projects built, etc."
-              rows={4}
-            />
-          </div>
-        </div>
+                  {/* Banner Upload */}
+                  <div 
+                    onClick={() => bannerInputRef.current?.click()}
+                    className="group relative flex-2 h-24 border border-dashed border-[#E9E6D7]/30 hover:border-[#E9E6D7] transition-all cursor-pointer bg-[#0a0a0a] flex flex-col items-center justify-center gap-1.5"
+                  >
+                    <input
+                      ref={bannerInputRef}
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(e) => setBannerFile(e.target.files ? e.target.files[0] : null)}
+                    />
+                    <div className="flex items-center gap-1.5 text-[#E9E6D7]/60 group-hover:text-[#E9E6D7] transition-colors">
+                      <Upload size={14} />
+                      <span className="text-[10px]">{bannerFile ? "Image Selected" : "Upload Banner"}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-        {/* COLUMN 3 — Socials + Submit */}
-        <div className="space-y-4">
-          <div className="p-4 border border-gray-800 rounded-xl bg-black/40">
-            <h3 className="text-gray-300 font-medium mb-3 text-base">Social Profiles</h3>
+              {/* Stack */}
+              <div>
+                <h3 className={labelClasses}>Tech Stack</h3>
+                <div className="relative">
+                  <div className="absolute top-2.5 left-2.5 text-[#E9E6D7]/40">
+                    <Cpu size={14} />
+                  </div>
+                  <textarea
+                    name="stack"
+                    value={formData.stack}
+                    onChange={handleChange}
+                    className={`${textareaClasses} pl-9 h-24`}
+                    placeholder="Next.js, TS, Rust..."
+                  />
+                </div>
+              </div>
+            </div>
 
-            <div className="space-y-3">
-              <input
-                type="text"
-                value={leetcodeUsername}
-                onChange={(e) => setLeetcodeUsername(e.target.value)}
-                placeholder="LeetCode Username"
-                className="w-full p-2 rounded-lg bg-black border border-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-600"
-              />
-              <input
-                type="url"
-                name="github"
-                value={formData.socials.github}
-                onChange={handleSocialChange}
-                placeholder="GitHub URL"
-                className="w-full p-2 rounded-lg bg-black border border-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-600"
-              />
-              <input
-                type="url"
-                name="linkedin"
-                value={formData.socials.linkedin}
-                onChange={handleSocialChange}
-                placeholder="LinkedIn URL"
-                className="w-full p-2 rounded-lg bg-black border border-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-600"
-              />
-              <input
-                type="url"
-                name="twitter"
-                value={formData.socials.twitter}
-                onChange={handleSocialChange}
-                placeholder="Twitter URL"
-                className="w-full p-2 rounded-lg bg-black border border-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-600"
-              />
-              <input
-                type="url"
-                name="portfolio"
-                value={formData.socials.portfolio}
-                onChange={handleSocialChange}
-                placeholder="Portfolio URL"
-                className="w-full p-2 rounded-lg bg-black border border-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-600"
-              />
+            {/* COLUMN 2: Details */}
+            <div className="space-y-5">
+              <div>
+                <h3 className={labelClasses}>About You</h3>
+                <div className="relative">
+                  {/* Reduced height from h-64 to h-32/h-40 */}
+                  <textarea
+                    name="about"
+                    value={formData.about}
+                    onChange={handleChange}
+                    className={`${textareaClasses} h-54`} 
+                    placeholder="Tell your story. What are you building?"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <h3 className={labelClasses}>Developer Stats</h3>
+                <div className="relative">
+                  <textarea
+                    name="devstats"
+                    value={formData.devstats}
+                    onChange={handleChange}
+                    className={`${textareaClasses} h-20 font-mono text-xs leading-relaxed`}
+                    placeholder={"Exp: 4 Years\nShipped: 12"}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* COLUMN 3: Presence */}
+            <div className="space-y-5 flex flex-col h-full">
+              <div>
+                <h3 className={labelClasses}>Social Presence</h3>
+                <div className="space-y-2.5">
+                  
+                  {/* LeetCode */}
+                  <div className="relative group">
+                    <div className="absolute top-2.5 left-2.5 text-[#E9E6D7]/40 group-focus-within:text-[#E9E6D7] transition-colors">
+                      <Code2 size={14} />
+                    </div>
+                    <input
+                      type="text"
+                      value={leetcodeUsername}
+                      onChange={(e) => setLeetcodeUsername(e.target.value)}
+                      placeholder="LeetCode User"
+                      className={inputBaseClasses}
+                    />
+                  </div>
+
+                  {/* GitHub */}
+                  <div className="relative group">
+                    <div className="absolute top-2.5 left-2.5 text-[#E9E6D7]/40 group-focus-within:text-[#E9E6D7] transition-colors">
+                      <Github size={14} />
+                    </div>
+                    <input
+                      type="url"
+                      name="github"
+                      value={formData.socials.github}
+                      onChange={handleSocialChange}
+                      placeholder="GitHub URL"
+                      className={inputBaseClasses}
+                    />
+                  </div>
+
+                  {/* LinkedIn */}
+                  <div className="relative group">
+                    <div className="absolute top-2.5 left-2.5 text-[#E9E6D7]/40 group-focus-within:text-[#E9E6D7] transition-colors">
+                      <Linkedin size={14} />
+                    </div>
+                    <input
+                      type="url"
+                      name="linkedin"
+                      value={formData.socials.linkedin}
+                      onChange={handleSocialChange}
+                      placeholder="LinkedIn URL"
+                      className={inputBaseClasses}
+                    />
+                  </div>
+
+                  {/* Twitter */}
+                  <div className="relative group">
+                    <div className="absolute top-2.5 left-2.5 text-[#E9E6D7]/40 group-focus-within:text-[#E9E6D7] transition-colors">
+                      <Twitter size={14} />
+                    </div>
+                    <input
+                      type="url"
+                      name="twitter"
+                      value={formData.socials.twitter}
+                      onChange={handleSocialChange}
+                      placeholder="Twitter URL"
+                      className={inputBaseClasses}
+                    />
+                  </div>
+
+                  {/* Portfolio */}
+                  <div className="relative group">
+                    <div className="absolute top-2.5 left-2.5 text-[#E9E6D7]/40 group-focus-within:text-[#E9E6D7] transition-colors">
+                      <Globe size={14} />
+                    </div>
+                    <input
+                      type="url"
+                      name="portfolio"
+                      value={formData.socials.portfolio}
+                      onChange={handleSocialChange}
+                      placeholder="Portfolio URL"
+                      className={inputBaseClasses}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1"></div>
+
+              {/* Messages & Actions */}
+              <div className="space-y-2 pt-4 border-t border-[#E9E6D7]/10">
+                {error && (
+                  <div className="bg-red-900/10 border border-red-900/30 text-red-400 p-2 text-xs flex items-center gap-2">
+                     <span className="w-1 h-1 bg-red-500 rounded-full animate-pulse"/>
+                     {error}
+                  </div>
+                )}
+                {success && (
+                  <div className="bg-[#E9E6D7]/10 border border-[#E9E6D7]/20 text-[#E9E6D7] p-2 text-xs flex items-center gap-2">
+                    <span className="w-1 h-1 bg-[#E9E6D7] rounded-full"/>
+                    Updated successfully.
+                  </div>
+                )}
+                
+                <button
+                  type="submit"
+                  disabled={loading || uploading}
+                  className="w-full h-10 flex items-center justify-center gap-2 text-black font-bold text-xs tracking-wider uppercase disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.01] active:scale-[0.99]"
+                  style={{ backgroundColor: offWhite }}
+                >
+                  {(loading || uploading) ? (
+                    <>
+                      <Loader2 className="animate-spin" size={14} />
+                      {uploading ? "Uploading..." : "Saving..."}
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-
-          {/* Status / Submit */}
-          <div className="mt-4 space-y-2">
-            {error && <p className="text-red-500 text-sm bg-red-900/20 p-2 rounded border border-red-800">{error}</p>}
-            {success && <p className="text-green-500 text-sm bg-green-900/20 p-2 rounded border border-green-800">Profile updated successfully!</p>}
-            {uploading && <p className="text-blue-400 text-sm">Uploading images...</p>}
-
-            <button
-              type="submit"
-              disabled={loading || uploading}
-              className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20"
-            >
-              {loading ? "Saving..." : "Update Profile"}
-            </button>
-          </div>
-        </div>
-
-      </form>
+        </form>
+      </div>
     </div>
-  </div>
-);
-
+  );
 }

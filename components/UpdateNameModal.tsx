@@ -64,12 +64,12 @@ export default function UpdateNameModal({ currentName, onClose }: UpdateNameModa
         <button
           type="button"
           onClick={() => onClose()}
-          className="absolute top-3 right-3 text-gray-400 hover:text-white text-xl"
+          className="absolute top-3 right-3 text-[#E9E6D7] hover:text-[#E9E6D7] text-xl"
         >
           ✕
         </button>
 
-        <h2 className="text-xl font-semibold mb-4 text-white">
+        <h2 className="text-xl font-semibold mb-4 text-[#E9E6D7]">
           Update Your Name
         </h2>
 
@@ -82,7 +82,7 @@ export default function UpdateNameModal({ currentName, onClose }: UpdateNameModa
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full p-2 rounded-lg bg-black border border-neutral-700 text-white"
+            className="w-full p-2 rounded-lg bg-black border border-neutral-700 text-[#E9E6D7]"
             disabled={loading}
           />
         </div>
@@ -92,7 +92,7 @@ export default function UpdateNameModal({ currentName, onClose }: UpdateNameModa
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 rounded-xl transition disabled:opacity-50 mt-5 flex items-center justify-center gap-2"
+          className="w-full bg-blue-600 hover:bg-blue-500 text-[#E9E6D7] font-semibold py-2 rounded-xl transition disabled:opacity-50 mt-5 flex items-center justify-center gap-2"
         >
           {loading && <Loader2 className="w-4 h-4 animate-spin" />}
           {loading ? "Saving..." : "Save"}

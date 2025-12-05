@@ -84,7 +84,7 @@ export default function PublicProfileHeader({
     if (isLoading) {
       return (
         <button
-          className="absolute right-10 bottom-6 bg-gray-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition flex items-center gap-2"
+          className="absolute right-10 bottom-6 bg-gray-700 text-[#E9E6D7] font-semibold px-4 py-2 rounded-lg shadow-md transition flex items-center gap-2"
           disabled
         >
           <Loader2 className="animate-spin h-4 w-4" />
@@ -98,7 +98,7 @@ export default function PublicProfileHeader({
       return (
         <button
           onClick={handleUnfollow}
-          className="absolute right-10 bottom-6 bg-gray-700 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition active:scale-95"
+          className="absolute right-10 bottom-6 bg-gray-700 hover:bg-gray-600 text-[#E9E6D7] font-semibold px-4 py-2 rounded-lg shadow-md transition active:scale-95"
         >
           Unfollow
         </button>
@@ -109,7 +109,7 @@ export default function PublicProfileHeader({
     return (
       <button
         onClick={handleFollow}
-        className="absolute right-10 bottom-6 bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition active:scale-95"
+        className="absolute right-10 bottom-6 bg-blue-600 hover:bg-blue-500 text-[#E9E6D7] font-semibold px-4 py-2 rounded-lg shadow-md transition active:scale-95"
       >
         Follow
       </button>
@@ -142,14 +142,14 @@ export default function PublicProfileHeader({
 
       {/* User Info & Follow Stats */}
       <div className="absolute left-44 bottom-2 flex flex-col">
-        <h2 className="text-2xl font-bold text-white">{userName}</h2>
-        <p className="text-gray-400 text-sm">@{username}</p>
+        <h2 className="text-2xl font-bold text-[#E9E6D7]">{userName}</h2>
+        <p className="text-[#E9E6D7] text-sm">@{username}</p>
         <div className="flex gap-4 mt-1">
           <span className="text-sm text-gray-300">
-            <strong className="text-white">{currentFollowerCount}</strong> Followers
+            <strong className="text-[#E9E6D7]">{currentFollowerCount}</strong> Followers
           </span>
           <span className="text-sm text-gray-300">
-            <strong className="text-white">{followingCount}</strong> Following
+            <strong className="text-[#E9E6D7]">{followingCount}</strong> Following
           </span>
         </div>
       </div>

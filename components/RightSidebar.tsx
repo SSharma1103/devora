@@ -56,7 +56,7 @@ export default function RightSidebar({ pdata: pdataProp }: SidebarProps) {
 
   if (loading)
     return (
-      <aside className="hidden lg:block w-80 p-4 text-gray-400 ml-10">
+      <aside className="hidden lg:block w-80 p-4 text-[#E9E6D7] ml-10">
         Loading personal info...
       </aside>
     );
@@ -70,7 +70,7 @@ export default function RightSidebar({ pdata: pdataProp }: SidebarProps) {
 
   if (!pdata)
     return (
-      <aside className="hidden lg:block w-80 p-4 text-gray-400 ml-10">
+      <aside className="hidden lg:block w-80 p-4 text-[#E9E6D7] ml-10">
         No personal data found.
       </aside>
     );
@@ -78,7 +78,7 @@ export default function RightSidebar({ pdata: pdataProp }: SidebarProps) {
   const socials = pdata.socials || {};
 
   return (
-    <aside className="hidden lg:block w-80 p-4 text-white space-y-6 ml-10">
+    <aside className="hidden lg:block w-80 p-4 text-[#E9E6D7] space-y-6 ml-10">
       {/* About section */}
       <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4">
         <h3 className="text-lg font-semibold mb-2">About</h3>

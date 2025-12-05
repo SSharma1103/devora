@@ -93,13 +93,13 @@ export default function Experience({ workExpData }: ExperienceProps) {
 
   if (loading)
     return (
-      <div className="flex justify-center items-center h-40 text-gray-400">
+      <div className="flex justify-center items-center h-40 text-[#E9E6D7]">
         <Loader2 className="animate-spin h-5 w-5 mr-2" /> Loading work experience...
       </div>
     );
 
   return (
-    <section id="experience" className="w-full max-w-5xl mx-auto text-white">
+    <section id="experience" className="w-full max-w-5xl mx-auto text-[#E9E6D7]">
       {/* 4. Conditionally show Add button */}
       {!workExpData && (
         <div className="flex items-center justify-between mb-6">
@@ -169,7 +169,7 @@ export default function Experience({ workExpData }: ExperienceProps) {
           <button
             type="submit"
             disabled={adding}
-            className="w-full flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg transition"
+            className="w-full flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-500 text-[#E9E6D7] py-2 rounded-lg transition"
           >
             {adding && <Loader2 className="animate-spin h-4 w-4" />}
             {adding ? "Adding..." : "Add Experience"}
@@ -198,7 +198,7 @@ export default function Experience({ workExpData }: ExperienceProps) {
                       <Briefcase className="w-5 h-5 text-blue-400" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-white">
+                      <h3 className="text-lg font-semibold text-[#E9E6D7]">
                         {exp.title}
                       </h3>
                       <p className="text-xs text-neutral-500">

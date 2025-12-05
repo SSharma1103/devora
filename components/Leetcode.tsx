@@ -9,7 +9,7 @@ function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex flex-col items-center space-y-0.5">
       <span className="text-gray-200">{value ?? 0}</span>
-      <span className="text-gray-400 text-xs">{label}</span>
+      <span className="text-[#E9E6D7] text-xs">{label}</span>
     </div>
   );
 }
@@ -106,13 +106,13 @@ export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
   }, [leetcodeUsername, session]);
 
   if (loading)
-    return <div className="text-gray-400 text-sm p-5">Loading LeetCode stats...</div>;
+    return <div className="text-[#E9E6D7] text-sm p-5">Loading LeetCode stats...</div>;
   
   if (error)
     return <div className="text-red-500 text-sm p-5">{error}</div>;
   
   if (!data)
-    return <div className="text-gray-400 text-sm p-5">No LeetCode data found</div>;
+    return <div className="text-[#E9E6D7] text-sm p-5">No LeetCode data found</div>;
 
   // derived values
   const totalSolved = data.easySolved + data.mediumSolved + data.hardSolved;
@@ -137,7 +137,7 @@ export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
           <div className="text-gray-500 text-xs tracking-wide">Problems Solved</div>
         </div>
 
-        <div className="flex justify-between text-xs text-gray-400">
+        <div className="flex justify-between text-xs text-[#E9E6D7]">
           <Stat label="Easy" value={data.easySolved} />
           <Stat label="Medium" value={data.mediumSolved} />
           <Stat label="Hard" value={data.hardSolved} />
@@ -163,14 +163,14 @@ export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
         </div>
 
         <div className="bg-black p-2 rounded-lg border border-gray-800">
-          <div className="text-xs text-gray-400">Global Ranking</div>
+          <div className="text-xs text-[#E9E6D7]">Global Ranking</div>
           <div className="text-xl font-semibold text-gray-100">
             #{data.ranking ?? "N/A"}
           </div>
         </div>
 
         <div className="space-y-2">
-          <div className="text-xs text-gray-400">Skill Stats</div>
+          <div className="text-xs text-[#E9E6D7]">Skill Stats</div>
           <SkillBar label="Algorithms" percent={Math.min(easyPercent + 20, 100)} />
           <SkillBar label="Data Structures" percent={Math.min(mediumPercent, 100)} />
           <SkillBar label="SQL" percent={Math.min(hardPercent, 100)} />

@@ -86,7 +86,7 @@ export default function TimelinePage() {
     if (loading) {
       return (
         <div className="flex justify-center items-center h-64">
-          <Loader2 className="animate-spin h-8 w-8 text-gray-400" />
+          <Loader2 className="animate-spin h-8 w-8 text-[#E9E6D7]" />
         </div>
       );
     }
@@ -101,7 +101,7 @@ export default function TimelinePage() {
           <h3 className="text-lg font-semibold">Your timeline is empty</h3>
           <p>Follow developers to see their latest projects and work experience.</p>
           <Link href="/search">
-            <button className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-semibold">
+            <button className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-[#E9E6D7] font-semibold">
               Find Developers
             </button>
           </Link>
@@ -136,7 +136,7 @@ export default function TimelinePage() {
 
   if (status === "loading") {
     return (
-      <div className="flex bg-black text-white min-h-screen">
+      <div className="flex bg-black text-[#E9E6D7] min-h-screen">
         <Sidebar />
         <main className="flex-1 p-8 md:p-12">
           <p className="text-neutral-500">Loading session...</p>
@@ -146,7 +146,7 @@ export default function TimelinePage() {
   }
 
   return (
-    <div className="flex bg-black text-white min-h-screen">
+    <div className="flex bg-black text-[#E9E6D7] min-h-screen">
       <Sidebar />
       <main className="flex-1 relative min-h-screen p-8 md:p-12 overflow-hidden">
         {/* ... (Background Gradient Blobs) ... */}
@@ -203,7 +203,7 @@ function TimelineProjectCard({ project }: { project: ProjectItem }) {
               href={project.gitlink}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-neutral-400 hover:text-white transition"
+              className="flex items-center gap-1 text-neutral-400 hover:text-[#E9E6D7] transition"
             >
               <Github className="w-4 h-4" /> GitHub
             </a>
@@ -277,13 +277,13 @@ function CardHeader({ user, timestamp }: { user: UserInfo; timestamp: string }) 
             />
           ) : (
             <div className="shrink-0 w-9 h-9 bg-neutral-800 rounded-full flex items-center justify-center border border-neutral-700">
-              <span className="text-sm font-semibold text-white">
+              <span className="text-sm font-semibold text-[#E9E6D7]">
                 {userFirstInitial}
               </span>
             </div>
           )}
           <div>
-            <h4 className="font-semibold text-white group-hover:underline">
+            <h4 className="font-semibold text-[#E9E6D7] group-hover:underline">
               {user.name || user.username}
             </h4>
             <p className="text-xs text-neutral-400">@{user.username}</p>

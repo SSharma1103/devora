@@ -38,7 +38,7 @@ export default function Home() {
   // Loading screen
   if (status === "loading") {
     return (
-      <div className="flex justify-center items-center h-screen text-gray-400">
+      <div className="flex justify-center items-center h-screen text-[#E9E6D7]">
         Loading...
       </div>
     );
@@ -62,13 +62,13 @@ export default function Home() {
         </div>
 
         {/* Right Side: Login UI */}
-        <div className="flex items-center justify-center bg-black text-white px-6">
+        <div className="flex items-center justify-center bg-black text-[#E9E6D7] px-6">
           <div className="w-full max-w-md bg-black rounded-2xl border border-gray-800 p-8 shadow-lg backdrop-blur-md bg-opacity-60">
             <h2 className="text-3xl font-semibold mb-6 text-center">
               Welcome Back
             </h2>
 
-            <p className="text-gray-400 text-center mb-8">
+            <p className="text-[#E9E6D7] text-center mb-8">
               Login to continue to your account
             </p>
 
@@ -77,7 +77,7 @@ export default function Home() {
               <button
                 onClick={() => handleSignIn("google")}
                 disabled={loading}
-                className="flex items-center justify-center space-x-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 rounded-lg border border-gray-700 transition active:scale-95"
+                className="flex items-center justify-center space-x-3 bg-gray-900 hover:bg-gray-800 text-[#E9E6D7] font-semibold py-3 rounded-lg border border-gray-700 transition active:scale-95"
               >
                 <FcGoogle className="text-2xl" />
                 <span>{loading ? "Signing in..." : "Continue with Google"}</span>
@@ -86,7 +86,7 @@ export default function Home() {
               <button
                 onClick={() => handleSignIn("github")}
                 disabled={loading}
-                className="flex items-center justify-center space-x-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 rounded-lg border border-gray-700 transition active:scale-95"
+                className="flex items-center justify-center space-x-3 bg-gray-900 hover:bg-gray-800 text-[#E9E6D7] font-semibold py-3 rounded-lg border border-gray-700 transition active:scale-95"
               >
                 <FaGithub className="text-xl" />
                 <span>{loading ? "Signing in..." : "Continue with GitHub"}</span>
@@ -102,7 +102,7 @@ export default function Home() {
   // 👇 Logged In — Show Sidebar + Dashboard
   // -------------------------------
   return (
-    <div className="flex bg-black text-white min-h-screen">
+    <div className="flex bg-black text-[#E9E6D7] min-h-screen">
       {/* Sidebar */}
       <Sidebar />
 

@@ -81,14 +81,14 @@ export default function ConnectionsPage() {
           />
         ) : (
           <div className="shrink-0 w-12 h-12 bg-neutral-800 rounded-full flex items-center justify-center border border-neutral-700">
-            <span className="text-xl font-semibold text-white">
+            <span className="text-xl font-semibold text-[#E9E6D7]">
               {dev.name?.charAt(0) || dev.username.charAt(0).toUpperCase()}
             </span>
           </div>
         )}
 
         <div>
-          <h3 className="text-lg font-semibold text-white">
+          <h3 className="text-lg font-semibold text-[#E9E6D7]">
             {dev.name || "Unnamed Developer"}
           </h3>
           <p className="text-sm text-neutral-400">@{dev.username}</p>
@@ -100,7 +100,7 @@ export default function ConnectionsPage() {
   // Show loading skeleton while checking auth
   if (status === "loading") {
     return (
-      <div className="flex bg-black text-white min-h-screen">
+      <div className="flex bg-black text-[#E9E6D7] min-h-screen">
         <Sidebar />
         <main className="flex-1 p-8 md:p-12">
           <p className="text-neutral-500">Loading...</p>
@@ -110,7 +110,7 @@ export default function ConnectionsPage() {
   }
 
   return (
-    <div className="flex bg-black text-white min-h-screen">
+    <div className="flex bg-black text-[#E9E6D7] min-h-screen">
       {/* --- Sidebar --- */}
       <Sidebar />
 
@@ -140,7 +140,7 @@ export default function ConnectionsPage() {
                 e.key === "Enter" && fetchConnections(activeTab, query)
               }
               placeholder={`Search ${activeTab}...`}
-              className="w-full p-4 pl-12 bg-neutral-900/50 border border-neutral-800 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-4 pl-12 bg-neutral-900/50 border border-neutral-800 rounded-lg text-[#E9E6D7] placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#E9E6D7]"
             />
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
           </div>
@@ -151,7 +151,7 @@ export default function ConnectionsPage() {
               <li
                 className={`pb-3 cursor-pointer flex items-center gap-2 ${
                   activeTab === "followers"
-                    ? "text-white font-semibold border-b-2 border-white"
+                    ? "text-[#E9E6D7] font-semibold border-b-2 border-white"
                     : "text-neutral-500"
                 }`}
                 onClick={() => {
@@ -165,7 +165,7 @@ export default function ConnectionsPage() {
               <li
                 className={`pb-3 cursor-pointer flex items-center gap-2 ${
                   activeTab === "following"
-                    ? "text-white font-semibold border-b-2 border-white"
+                    ? "text-[#E9E6D7] font-semibold border-b-2 border-white"
                     : "text-neutral-500"
                 }`}
                 onClick={() => {

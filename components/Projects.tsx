@@ -91,13 +91,13 @@ export default function Projects({ projectsData }: ProjectsProps) {
 
   if (loading)
     return (
-      <div className="flex justify-center items-center h-40 text-gray-400">
+      <div className="flex justify-center items-center h-40 text-[#E9E6D7]">
         <Loader2 className="animate-spin h-5 w-5 mr-2" /> Loading projects...
       </div>
     );
 
   return (
-    <section id="projects" className="w-full max-w-5xl mx-auto text-white">
+    <section id="projects" className="w-full max-w-5xl mx-auto text-[#E9E6D7]">
       {/* 4. Conditionally show Add button */}
       {!projectsData && (
         <div className="flex items-center justify-between mb-6">
@@ -107,7 +107,7 @@ export default function Projects({ projectsData }: ProjectsProps) {
               const form = document.getElementById("add-project-form");
               form?.classList.toggle("hidden");
             }}
-            className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg text-sm text-gray-200 transition"
+            className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg text-sm text-[#E9E6D7] transition"
           >
             <Plus className="h-4 w-4" /> Add Project
           </button>
@@ -167,7 +167,7 @@ export default function Projects({ projectsData }: ProjectsProps) {
           <button
             type="submit"
             disabled={adding}
-            className="w-full flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg transition"
+            className="w-full flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-500 text-[#E9E6D7] py-2 rounded-lg transition"
           >
             {adding && <Loader2 className="animate-spin h-4 w-4" />}
             {adding ? "Adding..." : "Add Project"}
@@ -218,7 +218,7 @@ export default function Projects({ projectsData }: ProjectsProps) {
                   <a
                     href={project.gitlink}
                     target="_blank"
-                    className="text-gray-400 hover:text-blue-400 transition"
+                    className="text-[#E9E6D7] hover:text-blue-400 transition"
                     rel="noopener noreferrer"
                   >
                     GitHub →
@@ -228,7 +228,7 @@ export default function Projects({ projectsData }: ProjectsProps) {
             </div>
           ))
         ) : (
-          <div className="text-gray-500 text-center py-8 border border-gray-800 rounded-lg">
+          <div className="text-[#E9E6D7] text-center py-8 border border-gray-800 rounded-lg">
             No projects yet. Add one with the button above!
           </div>
         )}

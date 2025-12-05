@@ -65,7 +65,7 @@ export default function DiscoverPage() {
   // Developer card (live data)
   const DeveloperCard = ({ dev }: { dev: UserType }) => (
     // 2. Added "cursor-pointer" to make it feel interactive
-    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 transition-all hover:border-blue-500/50 cursor-pointer">
+    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 transition-all hover:border-[#E9E6D7] cursor-pointer">
       <div className="flex items-center gap-4">
         {dev.pfp ? (
           <img
@@ -75,14 +75,14 @@ export default function DiscoverPage() {
           />
         ) : (
           <div className="shrink-0 w-12 h-12 bg-neutral-800 rounded-full flex items-center justify-center border border-neutral-700">
-            <span className="text-xl font-semibold text-white">
+            <span className="text-xl font-semibold text-[#E9E6D7]">
               {dev.name?.charAt(0) || dev.username.charAt(0).toUpperCase()}
             </span>
           </div>
         )}
 
         <div>
-          <h3 className="text-lg font-semibold text-white">
+          <h3 className="text-lg font-semibold text-[#E9E6D7]">
             {dev.name || "Unnamed Developer"}
           </h3>
           <p className="text-sm text-neutral-400">@{dev.username}</p>
@@ -97,12 +97,12 @@ export default function DiscoverPage() {
   }: {
     item: (typeof projectData)[0];
   }) => (
-    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 transition-all hover:border-blue-500/50">
+    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 transition-all hover:border-[#E9E6D7]">
       <div className="flex items-center gap-3 mb-2">
         <div className="bg-neutral-800 p-2 rounded-lg">
           <FolderGit2 className="w-5 h-5 text-blue-400" />
         </div>
-        <h3 className="text-lg font-semibold text-white">{item.title}</h3>
+        <h3 className="text-lg font-semibold text-[#E9E6D7]">{item.title}</h3>
       </div>
       <p className="text-sm text-neutral-400 mb-4">{item.description}</p>
       <div className="flex flex-wrap gap-2">
@@ -120,7 +120,7 @@ export default function DiscoverPage() {
 
 
   return (
-    <div className="flex bg-black text-white min-h-screen">
+    <div className="flex bg-black text-[#E9E6D7] min-h-screen">
       {/* --- Sidebar --- */}
       <Sidebar />
 
@@ -147,7 +147,7 @@ export default function DiscoverPage() {
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && fetchUsers(query)}
               placeholder="Search for developers by name or username..."
-              className="w-full p-4 pl-12 bg-neutral-900/50 border border-neutral-800 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-4 pl-12 bg-neutral-900/50 border border-neutral-800 rounded-lg text-[#E9E6D7] placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#E9E6D7]"
             />
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
           </div>
@@ -157,7 +157,7 @@ export default function DiscoverPage() {
               <li
                 className={`pb-3 cursor-pointer flex items-center gap-2 ${
                   activeTab === "developers"
-                    ? "text-white font-semibold border-b-2 border-white"
+                    ? "text-[#E9E6D7] font-semibold border-b-2 border-white"
                     : "text-neutral-500"
                 }`}
                 onClick={() => setActiveTab("developers")}
@@ -168,7 +168,7 @@ export default function DiscoverPage() {
               <li
                 className={`pb-3 cursor-pointer flex items-center gap-2 ${
                   activeTab === "projects"
-                    ? "text-white font-semibold border-b-2 border-white"
+                    ? "text-[#E9E6D7] font-semibold border-b-2 border-white"
                     : "text-neutral-500"
                 }`}
                 onClick={() => setActiveTab("projects")}

@@ -81,8 +81,6 @@ export default function DashboardContent() {
         return (
           <div>
             <GitHub />
-            <div className="h-2"></div>
-            <GitHub />
           </div>
         );
       case "leetcode":

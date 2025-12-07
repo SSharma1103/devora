@@ -97,7 +97,9 @@ export function processGitHubStats(stats: GitHubStats) {
 
   // Calculate total commits (approximation from repositories)
   const totalCommits = stats.repositories.nodes.reduce((sum, repo) => {
-    return sum + (repo.defaultBranchRef?.target.history.totalCount || 0);
+    // FIX: Add optional chaining (?.) for defaultBranchRef and history
+    // Empty repositories have no defaultBranchRef, causing a crash without this.
+    return sum + (repo.defaultBranchRef?.target?.history?.totalCount || 0);
   }, 0);
 
   // Total contributions this year

@@ -5,6 +5,7 @@ declare module "next-auth" {
     userId?: string;
     username?: string | null;
     accessToken?: string;
+    githubAccessToken?: string;
     hasGitHub?: boolean;
     hasGoogle?: boolean;
     user: {
@@ -19,6 +20,7 @@ declare module "next-auth/jwt" {
   interface JWT {
     userId?: string;
     accessToken?: string;
+    githubAccessToken?: string;
   }
 }
 

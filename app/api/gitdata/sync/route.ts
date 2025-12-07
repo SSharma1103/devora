@@ -9,7 +9,12 @@ export async function POST() {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.userId || !session?.accessToken) {
+    // FIX: Check for githubAccessToken first (specific), then accessToken (generic).
+    // This supports scenarios where the user is currently authenticated via Google
+    // but has a valid GitHub token stored in the session from a previous link/login.
+    const token = session?.githubAccessToken || session?.accessToken;
+
+    if (!session?.userId || !token) {
       return NextResponse.json(
         { error: "Unauthorized or no GitHub token available" },
         { status: 401 }
@@ -23,8 +28,8 @@ export async function POST() {
       );
     }
 
-    // Fetch GitHub stats
-    const stats = await fetchGitHubStats(session.accessToken);
+    // Fetch GitHub stats using the resolved token
+    const stats = await fetchGitHubStats(token);
     const processedData = processGitHubStats(stats);
 
     // Upsert git data
@@ -109,4 +114,3 @@ export async function GET() {
     );
   }
 }
-

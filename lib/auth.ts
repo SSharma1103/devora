@@ -1,8 +1,6 @@
 import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
-import type { Session, Account, Profile } from "next-auth";
 import type { AuthOptions } from "next-auth";
-import type { JWT } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
 import { OAuthProfile } from "@/types/next-auth";
 import { cookies } from "next/headers";
@@ -43,8 +41,7 @@ export const authOptions: AuthOptions = {
       let email: string | null = null;
       let name: string | null = null;
       let pfp: string | null = null;
-      // Initialize banner (Standard OAuth providers usually don't send a banner, so this stays null)
-      let banner: string | null = null; 
+      let banner: string | null = null;
 
       const isGoogle = "sub" in oauth;
       const providerIdField: "googleId" | "githubId" = isGoogle
@@ -81,7 +78,6 @@ export const authOptions: AuthOptions = {
                   githubId: providerId,
                   name: userToLink.name ?? name,
                   pfp: userToLink.pfp ?? pfp,
-                  // We don't overwrite banner here to preserve existing user banner if they have one
                 },
               });
 
@@ -89,12 +85,14 @@ export const authOptions: AuthOptions = {
               return true;
             }
           }
-        } catch {}
+        } catch (e) {
+          console.error("Link cookie error", e);
+        }
       }
 
       // 1. Lookup by provider
       let user = await prisma.user.findUnique({
-        where: { [providerIdField]: providerId } as any, // safe here only
+        where: { [providerIdField]: providerId } as any,
       });
 
       if (user) return true;
@@ -122,7 +120,7 @@ export const authOptions: AuthOptions = {
           email,
           name,
           pfp,
-          banner, // Added banner here
+          banner,
         },
       });
 
@@ -131,8 +129,14 @@ export const authOptions: AuthOptions = {
 
     async jwt({ token, account, profile }) {
       if (account) {
+        // 1. Generic access token (updates on every login)
         if (account.access_token) {
           token.accessToken = account.access_token;
+        }
+
+        // 2. Store GitHub token specifically and persistently [FIX]
+        if (account.provider === "github" && account.access_token) {
+          token.githubAccessToken = account.access_token;
         }
 
         if (profile) {
@@ -150,7 +154,6 @@ export const authOptions: AuthOptions = {
             email = oauth.email ?? null;
           }
 
-          // ---- FIXED: EXPLICIT, TYPE-SAFE WHERE INPUT ----
           let whereInput: Prisma.UserWhereUniqueInput | null = null;
 
           if (provider === "google") {
@@ -198,7 +201,7 @@ export const authOptions: AuthOptions = {
             githubId: true,
             googleId: true,
             pfp: true,
-            banner: true, // <--- CRITICAL: Must select banner from DB
+            banner: true,
           },
         });
 
@@ -213,12 +216,15 @@ export const authOptions: AuthOptions = {
             name: user.name ?? session.user?.name,
             email: user.email ?? session.user?.email,
             image: user.pfp ?? session.user?.image,
-            banner: user.banner ?? session.user?.banner, // Assign to session
+            banner: user.banner ?? session.user?.banner,
           };
         }
       }
 
       session.accessToken = token.accessToken as string;
+      // Pass the specific GitHub token to the session [FIX]
+      session.githubAccessToken = token.githubAccessToken as string;
+      
       return session;
     },
   },

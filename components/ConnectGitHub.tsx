@@ -3,7 +3,7 @@
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { FaGithub } from "react-icons/fa";
-import { Loader2 } from "lucide-react";
+import { Loader2 ,Github} from "lucide-react";
 
 export default function ConnectGitHub() {
   const [loading, setLoading] = useState(false);
@@ -44,17 +44,17 @@ export default function ConnectGitHub() {
         <button
           onClick={handleConnect}
           disabled={loading}
-          className="shrink-0 flex items-center justify-center gap-2 bg-[#E9E6D7] hover:bg-[#E9E6D7] text-[#E9E6D7] font-semibold py-2.5 px-6 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20 active:scale-95"
+          className="shrink-0 flex items-center justify-center gap-3 bg-[#E9E6D7] hover:bg-white text-black px-6 py-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed group/btn hover:scale-[1.01] min-w-[180px]"
         >
           {loading ? (
             <>
-              <Loader2 className="animate-spin h-5 w-5" />
-              <span>Connecting...</span>
+              <Loader2 className="animate-spin" size={18} />
+              <span className="text-xs font-bold uppercase tracking-wider">Syncing...</span>
             </>
           ) : (
             <>
-              <FaGithub className="text-xl bg-black" />
-              <span className="bg-black"> Connect GitHub</span>
+              <Github size={18} className="fill-current" />
+              <span className="text-xs font-bold uppercase tracking-wider">Connect Account</span>
             </>
           )}
         </button>

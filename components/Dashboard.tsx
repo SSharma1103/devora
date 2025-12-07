@@ -94,11 +94,10 @@ export default function Dashboard() {
       <div className="mt-20">
         {/* Render BOTH modals, each controlled by its own state */}
         
-        {/* The main "Edit Profile" modal */}
+        {/* The main "Edit Profile" modal - FIXED: Removed currentName prop */}
         {isProfileModalOpen && (
           <UpdateProfileForm
             onClose={handleProfileModalClose}
-            currentName={userName}
           />
         )}
 

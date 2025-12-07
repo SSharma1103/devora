@@ -71,7 +71,7 @@ export default function ConnectionsPage() {
 
   // Developer card (re-usable)
   const DeveloperCard = ({ dev }: { dev: UserType }) => (
-    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 transition-all hover:border-blue-500/50 cursor-pointer">
+    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 transition-all hover:border-[#E9E6D7] cursor-pointer">
       <div className="flex items-center gap-4">
         {dev.pfp ? (
           <img

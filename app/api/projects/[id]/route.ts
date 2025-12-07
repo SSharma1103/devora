@@ -3,12 +3,17 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+// Helper type for the new async params
+type RouteParams = { params: Promise<{ id: string }> };
+
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
     const session = await getServerSession(authOptions);
+    // Await the params here
+    const { id } = await params;
 
     if (!session?.userId) {
       return NextResponse.json(
@@ -19,7 +24,7 @@ export async function GET(
 
     const project = await prisma.project.findFirst({
       where: {
-        id: parseInt(params.id),
+        id: parseInt(id), // Use the awaited id
         userId: parseInt(session.userId),
       },
     });
@@ -43,10 +48,11 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
     const session = await getServerSession(authOptions);
+    const { id } = await params; // Await here
 
     if (!session?.userId) {
       return NextResponse.json(
@@ -61,7 +67,7 @@ export async function PUT(
     // Verify project belongs to user
     const existingProject = await prisma.project.findFirst({
       where: {
-        id: parseInt(params.id),
+        id: parseInt(id), // Use the awaited id
         userId: parseInt(session.userId),
       },
     });
@@ -74,7 +80,7 @@ export async function PUT(
     }
 
     const project = await prisma.project.update({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       data: {
         ...(title !== undefined && { title }),
         ...(link !== undefined && { link }),
@@ -95,10 +101,11 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
     const session = await getServerSession(authOptions);
+    const { id } = await params; // Await here
 
     if (!session?.userId) {
       return NextResponse.json(
@@ -110,7 +117,7 @@ export async function DELETE(
     // Verify project belongs to user
     const existingProject = await prisma.project.findFirst({
       where: {
-        id: parseInt(params.id),
+        id: parseInt(id), // Use the awaited id
         userId: parseInt(session.userId),
       },
     });
@@ -123,7 +130,7 @@ export async function DELETE(
     }
 
     await prisma.project.delete({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
     });
 
     return NextResponse.json({ success: true, message: "Project deleted" });
@@ -135,4 +142,3 @@ export async function DELETE(
     );
   }
 }
-

@@ -20,29 +20,30 @@ model User {
   githubId  String?   @unique
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  accounts  Account[]
+  following Follow[]  @relation("Following")
+  followers Follow[]  @relation("Followers")
   gitdata   Gitdata?
   pdata     Pdata?
   projects  Project[] @relation("UserProjects")
   workExp   WorkExp[] @relation("UserWorkExp")
-  following Follow[] @relation("Following")
-  followers Follow[] @relation("Followers")
 }
 
 model Gitdata {
   id                    Int      @id @default(autoincrement())
   repos                 Int?
-  privateRepos          Int?
   commits               Int?
   followers             Int?
   following             Int?
   stars                 Int?
-  totalContributions    Int?
-  contributionsThisYear Int?
-  contributionsNotOwned Int?
-  accountAge            Int? // in days
-  commitHistory         Json? // Store commit history as JSON
-  lastSynced            DateTime @default(now()) @updatedAt
   userId                Int?     @unique
+  accountAge            Int?
+  commitHistory         Json?
+  contributionsNotOwned Int?
+  contributionsThisYear Int?
+  lastSynced            DateTime @default(now()) @updatedAt
+  privateRepos          Int?
+  totalContributions    Int?
   user                  User?    @relation(fields: [userId], references: [id])
 }
 
@@ -57,39 +58,54 @@ model Pdata {
 }
 
 model WorkExp {
-  id          Int     @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   title       String
   duration    String?
   description String?
   companyName String?
   image       String?
   userId      Int?
-  user        User?   @relation("UserWorkExp", fields: [userId], references: [id])
-  createdAt   DateTime @default(now()) 
+  createdAt   DateTime @default(now())
+  user        User?    @relation("UserWorkExp", fields: [userId], references: [id])
 }
 
 model Project {
-  id          Int     @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   title       String
   link        String?
   description String?
   gitlink     String?
   userId      Int?
-  user        User?   @relation("UserProjects", fields: [userId], references: [id])
-  createdAt   DateTime @default(now()) 
+  createdAt   DateTime @default(now())
+  user        User?    @relation("UserProjects", fields: [userId], references: [id])
 }
 
 model Follow {
   followerId  Int
   followingId Int
   createdAt   DateTime @default(now())
+  follower    User     @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
 
-  // --- Define relations ---
-  follower    User @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
-  following   User @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
-
-  // --- Define a composite primary key ---
   @@id([followerId, followingId])
   @@index([followerId])
   @@index([followingId])
+}
+
+model Account {
+  id                Int     @id @default(autoincrement())
+  userId            Int
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
 }

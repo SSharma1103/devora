@@ -94,16 +94,13 @@ export default function Github({ gitData: gitDataProp }: GithubProps) {
 
         {/* If it's YOUR profile (no gitDataProp), show Login with GitHub */}
         {!gitDataProp && (
-          <button
-            onClick={() => {
-              // Change this URL to whatever starts your GitHub OAuth / NextAuth flow
-              window.location.href = "/api/auth/github";
-            }}
-            className="mt-2 flex items-center gap-2 px-4 py-2 bg-[#E9E6D7] hover:bg-white text-black text-xs font-bold uppercase tracking-wider transition-all hover:scale-[1.02]"
+          <div
+            
+            className="mt-2 flex items-center gap-2 px-4 py-2 bg-[#E9E6D7] text-black text-xs font-bold uppercase tracking-wider transition-all "
           >
             <GithubIcon size={16} />
             <span>Login with GitHub</span>
-          </button>
+          </div>
         )}
 
         {/* If viewing someone else’s public card and their fetch failed */}

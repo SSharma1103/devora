@@ -1,31 +1,35 @@
-//[copy:ssharma1103/devora/devora-b7321077cd9d75e6fb001acbeaa36d22b960d15c/components/GitHub.tsx]
 "use client";
 
 import { useEffect, useState } from "react";
-import { GitMerge, GitBranch, User, CheckCircle2, RefreshCw, Plus } from "lucide-react";
+import { 
+  GitMerge, 
+  GitBranch, 
+  User, 
+  CheckCircle2, 
+  RefreshCw, 
+  Plus, 
+  Star, 
+  Github as GithubIcon,
+  AlertCircle
+} from "lucide-react";
 
-// 1. Add Props interface
 interface GithubProps {
-  gitData?: any; // Make it optional
+  gitData?: any; // Optional prop for public view
 }
 
-// 2. Accept props
 export default function Github({ gitData: gitDataProp }: GithubProps) {
   const [gitData, setGitData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 3. Update useEffect
   useEffect(() => {
-    // If data is passed as a prop, use it directly
     if (gitDataProp) {
       setGitData(gitDataProp);
       setLoading(false);
-      return; // Skip fetching
+      return;
     }
 
-    // If no prop, fetch data as usual (for the dashboard)
     const fetchData = async () => {
       try {
         const res = await fetch("/api/gitdata/sync", { method: "GET" });
@@ -42,9 +46,8 @@ export default function Github({ gitData: gitDataProp }: GithubProps) {
     };
 
     fetchData();
-  }, [gitDataProp]); // Add prop to dependency array
+  }, [gitDataProp]);
 
-  // Handle manual sync (only used on dashboard)
   const handleSync = async () => {
     try {
       setSyncing(true);
@@ -62,73 +65,101 @@ export default function Github({ gitData: gitDataProp }: GithubProps) {
     }
   };
 
+  // --- Theme Constants ---
+  const offWhite = "#E9E6D7";
+  const labelClass = "text-[10px] font-bold text-[#E9E6D7]/50 uppercase tracking-widest";
+  const cardClass = "bg-[#050505] border border-[#E9E6D7]/10 p-4 flex flex-col items-center justify-center gap-1 transition-all hover:border-[#E9E6D7]/30 group";
+  const valueClass = "text-xl font-bold text-[#E9E6D7] font-mono group-hover:scale-105 transition-transform";
+
+  // --- Loading State ---
   if (loading)
     return (
-      <div className="flex justify-center items-center text-[#E9E6D7] h-40">
-        Loading GitHub data...
+      <div className="w-full h-48 bg-[#0a0a0a] border border-[#E9E6D7]/20 flex flex-col items-center justify-center gap-3">
+        <RefreshCw className="animate-spin text-[#E9E6D7]/40" size={24} />
+        <span className="text-xs text-[#E9E6D7]/60 tracking-wider uppercase animate-pulse">Fetching Git Data...</span>
       </div>
     );
 
+  // --- Error State ---
   if (error)
     return (
-      <div className="bg-red-900/30 border border-red-700 rounded-xl p-4 text-red-400 text-sm flex flex-col items-center">
-        <span>{error}</span>
-        {/* 4. Conditionally show Retry button */}
+      <div className="w-full bg-[#0a0a0a] border border-red-900/30 p-6 flex flex-col items-center justify-center gap-3 text-center">
+        <div className="p-2 bg-red-900/10 rounded-full text-red-400">
+            <AlertCircle size={20} />
+        </div>
+        <span className="text-[#E9E6D7] text-sm">{error}</span>
         {!gitDataProp && (
           <button
             onClick={handleSync}
-            className="mt-2 px-3 py-1 bg-red-700 hover:bg-red-600 rounded-md text-[#E9E6D7] text-sm transition"
+            className="mt-2 px-4 py-2 bg-red-900/20 hover:bg-red-900/40 border border-red-900/50 text-red-200 text-xs uppercase tracking-wider font-bold transition-all"
           >
-            Retry
+            Retry Connection
           </button>
         )}
       </div>
     );
 
+  // --- Empty State ---
   if (!gitData)
     return (
-      <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 text-center text-[#E9E6D7]">
-        {/* 5. Conditionally show Sync button */}
+      <div className="w-full bg-[#0a0a0a] border border-[#E9E6D7]/20 p-8 flex flex-col items-center justify-center gap-4 text-center group hover:border-[#E9E6D7]/40 transition-colors">
+        <div className="text-[#E9E6D7]/20 group-hover:text-[#E9E6D7]/40 transition-colors">
+            <GithubIcon size={32} />
+        </div>
+        
         {!gitDataProp ? (
           <>
-            No GitHub data found.
+            <div className="space-y-1">
+                <p className="text-[#E9E6D7] font-medium">No GitHub Data Linked</p>
+                <p className="text-xs text-[#E9E6D7]/50">Sync your account to display stats.</p>
+            </div>
             <button
               onClick={handleSync}
-              className="mt-3 flex items-center justify-center gap-1 px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-[#E9E6D7] text-sm transition"
+              className="flex items-center gap-2 px-4 py-2 bg-[#E9E6D7] hover:bg-white text-black text-xs font-bold uppercase tracking-wider transition-all hover:scale-[1.02]"
             >
-              <Plus className="h-4 w-4" />
+              <Plus size={14} />
               <span>Sync Now</span>
             </button>
           </>
         ) : (
-          "No GitHub data available for this user."
+          <p className="text-[#E9E6D7]/50 text-sm">No GitHub data available for this user.</p>
         )}
       </div>
     );
 
-  // Destructure what you need
   const { repos, followers, following, totalContributions, stars } = gitData;
 
+  // --- Main UI ---
   return (
-    <div className="w-full bg-[#0d1117] border border-gray-700 rounded-xl p-4 flex flex-col space-y-3 hover:border-gray-500 transition relative">
-      {/* Top Bar */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-gray-100 font-semibold text-lg">GitHub Overview</h2>
-        {/* 6. Conditionally show Sync button */}
+    <div className="w-full bg-[#0a0a0a] border border-[#E9E6D7]/20 p-5 flex flex-col gap-5 hover:border-[#E9E6D7]/40 transition-all relative">
+      
+      {/* Header */}
+      <div className="flex justify-between items-start">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-[#E9E6D7]/5 text-[#E9E6D7] rounded-sm">
+            <GithubIcon size={18} />
+          </div>
+          <div>
+            <h2 className="text-[#E9E6D7] font-bold text-sm tracking-tight">GITHUB ACTIVITY</h2>
+            <p className="text-[10px] text-[#E9E6D7]/40 uppercase tracking-widest mt-0.5">Live Metrics</p>
+          </div>
+        </div>
+
+        {/* Sync Button (Only if not viewing someone else's profile) */}
         {!gitDataProp && (
           <button
             onClick={handleSync}
             disabled={syncing}
-            className="flex items-center gap-1 px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-[#E9E6D7] transition"
+            className="flex items-center gap-2 px-3 py-1.5 bg-[#E9E6D7] hover:bg-white text-black text-[10px] font-bold uppercase tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {syncing ? (
               <>
-                <RefreshCw className="h-4 w-4 animate-spin" />
-                <span>Syncing...</span>
+                <RefreshCw size={12} className="animate-spin" />
+                <span>Syncing</span>
               </>
             ) : (
               <>
-                <Plus className="h-4 w-4" />
+                <RefreshCw size={12} />
                 <span>Sync</span>
               </>
             )}
@@ -136,35 +167,49 @@ export default function Github({ gitData: gitDataProp }: GithubProps) {
         )}
       </div>
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-3">
-          <div className="text-[#E9E6D7] text-sm">Repos</div>
-          <div className="text-gray-100 font-bold text-xl">{repos ?? 0}</div>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* Repos */}
+        <div className={cardClass}>
+          <div className="text-[#E9E6D7]/30 mb-1"><GitBranch size={14} /></div>
+          <span className={valueClass}>{repos ?? 0}</span>
+          <span className={labelClass}>Repos</span>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-3">
-          <div className="text-[#E9E6D7] text-sm">Followers</div>
-          <div className="text-gray-100 font-bold text-xl">{followers ?? 0}</div>
+
+        {/* Stars */}
+        <div className={cardClass}>
+          <div className="text-[#E9E6D7]/30 mb-1"><Star size={14} /></div>
+          <span className={valueClass}>{stars ?? 0}</span>
+          <span className={labelClass}>Stars</span>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-3">
-          <div className="text-[#E9E6D7] text-sm">Following</div>
-          <div className="text-gray-100 font-bold text-xl">{following ?? 0}</div>
+
+        {/* Followers */}
+        <div className={cardClass}>
+          <div className="text-[#E9E6D7]/30 mb-1"><User size={14} /></div>
+          <span className={valueClass}>{followers ?? 0}</span>
+          <span className={labelClass}>Followers</span>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-3">
-          <div className="text-[#E9E6D7] text-sm">Stars</div>
-          <div className="text-gray-100 font-bold text-xl">{stars ?? 0}</div>
+
+        {/* Following */}
+        <div className={cardClass}>
+           <div className="text-[#E9E6D7]/30 mb-1"><User size={14} /></div>
+          <span className={valueClass}>{following ?? 0}</span>
+          <span className={labelClass}>Following</span>
         </div>
       </div>
 
-      {/* Contribution Info */}
-      <div className="flex items-center justify-between text-sm text-[#E9E6D7] border-t border-gray-800 pt-3">
+      {/* Contribution Footer */}
+      <div className="flex items-center justify-between pt-4 border-t border-[#E9E6D7]/10">
         <div className="flex items-center gap-2">
-          <CheckCircle2 className="text-green-500 h-4 w-4" />
-          <span>Total Contributions: {totalContributions ?? 0}</span>
+          <CheckCircle2 size={14} className="text-[#E9E6D7]" />
+          <span className="text-xs font-medium text-[#E9E6D7]">
+            {totalContributions ?? 0} <span className="text-[#E9E6D7]/50">Contributions</span>
+          </span>
         </div>
-        <div className="flex items-center gap-1 text-purple-400">
-          <GitMerge className="h-4 w-4" />
-          <span>Last synced just now</span>
+        
+        <div className="flex items-center gap-1.5 text-[#E9E6D7]/30">
+          <GitMerge size={12} />
+          <span className="text-[10px] uppercase tracking-widest">Synced Recently</span>
         </div>
       </div>
     </div>

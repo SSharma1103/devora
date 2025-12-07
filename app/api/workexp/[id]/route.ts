@@ -3,12 +3,17 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+// Define the type for the route context
+type RouteParams = { params: Promise<{ id: string }> };
+
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
     const session = await getServerSession(authOptions);
+    // 1. Await the params object
+    const { id } = await params;
 
     if (!session?.userId) {
       return NextResponse.json(
@@ -19,7 +24,7 @@ export async function GET(
 
     const workExp = await prisma.workExp.findFirst({
       where: {
-        id: parseInt(params.id),
+        id: parseInt(id), // Use the awaited ID
         userId: parseInt(session.userId),
       },
     });
@@ -43,10 +48,12 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
     const session = await getServerSession(authOptions);
+    // 1. Await the params object
+    const { id } = await params;
 
     if (!session?.userId) {
       return NextResponse.json(
@@ -61,7 +68,7 @@ export async function PUT(
     // Verify work experience belongs to user
     const existingWorkExp = await prisma.workExp.findFirst({
       where: {
-        id: parseInt(params.id),
+        id: parseInt(id), // Use the awaited ID
         userId: parseInt(session.userId),
       },
     });
@@ -74,7 +81,7 @@ export async function PUT(
     }
 
     const workExp = await prisma.workExp.update({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       data: {
         ...(title !== undefined && { title }),
         ...(duration !== undefined && { duration }),
@@ -96,10 +103,12 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
     const session = await getServerSession(authOptions);
+    // 1. Await the params object
+    const { id } = await params;
 
     if (!session?.userId) {
       return NextResponse.json(
@@ -111,7 +120,7 @@ export async function DELETE(
     // Verify work experience belongs to user
     const existingWorkExp = await prisma.workExp.findFirst({
       where: {
-        id: parseInt(params.id),
+        id: parseInt(id), // Use the awaited ID
         userId: parseInt(session.userId),
       },
     });
@@ -124,7 +133,7 @@ export async function DELETE(
     }
 
     await prisma.workExp.delete({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
     });
 
     return NextResponse.json({ success: true, message: "Work experience deleted" });
@@ -136,4 +145,3 @@ export async function DELETE(
     );
   }
 }
-

@@ -92,31 +92,7 @@ export default function DiscoverPage() {
   );
 
   // ... (ProjectCard component remains the same) ...
-    const ProjectCard = ({
-    item,
-  }: {
-    item: (typeof projectData)[0];
-  }) => (
-    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 transition-all hover:border-[#E9E6D7]">
-      <div className="flex items-center gap-3 mb-2">
-        <div className="bg-neutral-800 p-2 rounded-lg">
-          <FolderGit2 className="w-5 h-5 text-blue-400" />
-        </div>
-        <h3 className="text-lg font-semibold text-[#E9E6D7]">{item.title}</h3>
-      </div>
-      <p className="text-sm text-neutral-400 mb-4">{item.description}</p>
-      <div className="flex flex-wrap gap-2">
-        {item.tech.map((tech) => (
-          <span
-            key={tech}
-            className="bg-neutral-800 text-neutral-300 text-xs px-2 py-1 rounded-full border border-neutral-700"
-          >
-            {tech}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
+
 
 
   return (
@@ -203,10 +179,7 @@ export default function DiscoverPage() {
               </>
             )}
 
-            {activeTab === "projects" &&
-              projectData.map((proj) => (
-                <ProjectCard key={proj.title} item={proj} />
-              ))}
+            
           </div>
         </div>
       </main>

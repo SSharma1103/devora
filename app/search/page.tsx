@@ -113,7 +113,7 @@ export default function DiscoverPage() {
           {/* ... (Header, Search, and Tabs remain the same) ... */}
           <h1 className="text-4xl font-bold mb-3">Discover</h1>
           <p className="text-lg text-neutral-400 mb-8">
-            Explore new projects, find talented developers, and get inspired.
+           find talented developers, and get inspired.
           </p>
 
           <div className="relative w-full mb-8">

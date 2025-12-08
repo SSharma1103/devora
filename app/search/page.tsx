@@ -141,17 +141,7 @@ export default function DiscoverPage() {
                 <User className="w-4 h-4" />
                 Developers
               </li>
-              <li
-                className={`pb-3 cursor-pointer flex items-center gap-2 ${
-                  activeTab === "projects"
-                    ? "text-[#E9E6D7] font-semibold border-b-2 border-white"
-                    : "text-neutral-500"
-                }`}
-                onClick={() => setActiveTab("projects")}
-              >
-                <Code className="w-4 h-4" />
-                Projects
-              </li>
+              
             </ul>
           </nav>
 

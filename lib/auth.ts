@@ -198,7 +198,8 @@ export const authOptions: AuthOptions = {
             githubId: true,
             googleId: true,
             pfp: true,
-            banner: true, // <--- CRITICAL: Must select banner from DB
+            banner: true, 
+            leetcode:true
           },
         });
 

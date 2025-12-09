@@ -44,7 +44,7 @@ export const authOptions: AuthOptions = {
       let name: string | null = null;
       let pfp: string | null = null;
       // Initialize banner (Standard OAuth providers usually don't send a banner, so this stays null)
-      let banner: string | null = null; 
+      let banner: string | null = null;
 
       const isGoogle = "sub" in oauth;
       const providerIdField: "googleId" | "githubId" = isGoogle
@@ -198,8 +198,14 @@ export const authOptions: AuthOptions = {
             githubId: true,
             googleId: true,
             pfp: true,
-            banner: true, 
-            leetcode:true
+            banner: true,
+            leetcode: true,
+            _count: {
+              select: {
+                followers: true,
+                following: true,
+              },
+            },
           },
         });
 
@@ -214,7 +220,9 @@ export const authOptions: AuthOptions = {
             name: user.name ?? session.user?.name,
             email: user.email ?? session.user?.email,
             image: user.pfp ?? session.user?.image,
-            banner: user.banner ?? session.user?.banner, // Assign to session
+            banner: user.banner ?? session.user?.banner, 
+            followersCount: user._count.followers,
+            followingCount: user._count.following,
           };
         }
       }

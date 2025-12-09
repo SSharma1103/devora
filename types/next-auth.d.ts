@@ -4,13 +4,15 @@ declare module "next-auth" {
   interface Session {
     userId?: string;
     username?: string | null;
-    accessToken?: string;
     hasGitHub?: boolean;
     hasGoogle?: boolean;
-    user: {
+    accessToken?: string;
+    user?: DefaultSession["user"] & {
       banner?: string | null;
-      id?: string;
-    } & DefaultSession["user"];
+      followersCount?: number;
+      followingCount?: number;
+      leetcode?: string | null;
+    };
   }
   }
 

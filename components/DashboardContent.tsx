@@ -7,6 +7,7 @@ import Projects from "./Projects";
 import GitHub from "./GitHub";
 import LeetCodeStatsCard from "./Leetcode";
 import RightSidebar from "./RightSidebar";
+import { useSession } from "next-auth/react";
 
 // 2. Define a type for pdata (can be expanded if needed)
 interface Pdata {
@@ -49,6 +50,8 @@ export default function DashboardContent() {
   const [activeTab, setActiveTab] = useState<
     "work" | "projects" | "github" | "leetcode"
   >("work");
+  const {data:session}= useSession()
+  const leetuser = session?.user?.leetcode
 
   // 4. Add state to hold pdata
   const [pdata, setPdata] = useState<Pdata | null>(null);
@@ -88,8 +91,8 @@ export default function DashboardContent() {
         if (loadingPdata) {
           return <div>Loading LeetCode data...</div>;
         }
-        const leetcodeUsername = extractLeetCodeUsername(pdata?.socials?.leetcode);
-        return <LeetCodeStatsCard leetcodeUsername={leetcodeUsername} />; // Pass the prop
+        
+        return <LeetCodeStatsCard leetcodeUsername={leetuser} />; // Pass the prop
       default:
         return null;
     }

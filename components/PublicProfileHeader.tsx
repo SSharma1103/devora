@@ -109,7 +109,7 @@ export default function PublicProfileHeader({
     return (
       <button
         onClick={handleFollow}
-        className="absolute right-10 bottom-6 bg-blue-600 hover:bg-blue-500 text-[#E9E6D7] font-semibold px-4 py-2 rounded-lg shadow-md transition active:scale-95"
+        className="absolute right-10 bottom-6 bg-[#E9E6D7]  text-black font-semibold px-4 py-2 rounded-lg shadow-md transition active:scale-95"
       >
         Follow
       </button>

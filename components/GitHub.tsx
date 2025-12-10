@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { signIn } from "next-auth/react";
 import { 
   GitMerge, 
   GitBranch, 
@@ -11,7 +12,7 @@ import {
   Star, 
   Github as GithubIcon,
   AlertCircle
-} from "lucide-react";
+} from "lucide-react";  
 
 interface GithubProps {
   gitData?: any; // Optional prop for public view
@@ -34,6 +35,12 @@ export default function Github({ gitData: gitDataProp }: GithubProps) {
       try {
         const res = await fetch("/api/gitdata/sync", { method: "GET" });
         const data = await res.json();
+
+        // Treat "not found" as an empty state instead of an error to keep the UI usable
+        if (res.status === 404) {
+          setGitData(null);
+          return;
+        }
 
         if (!res.ok) throw new Error(data.error || "Failed to fetch data");
 
@@ -94,13 +101,13 @@ export default function Github({ gitData: gitDataProp }: GithubProps) {
 
         {/* If it's YOUR profile (no gitDataProp), show Login with GitHub */}
         {!gitDataProp && (
-          <div
-            
-            className="mt-2 flex items-center gap-2 px-4 py-2 bg-[#E9E6D7] text-black text-xs font-bold uppercase tracking-wider transition-all "
+          <button
+            onClick={() => signIn("github", { callbackUrl: window.location.href })}
+            className="mt-2 flex items-center gap-2 px-4 py-2 bg-[#E9E6D7] text-black text-xs font-bold uppercase tracking-wider transition-all hover:bg-white"
           >
             <GithubIcon size={16} />
             <span>Login with GitHub</span>
-          </div>
+          </button>
         )}
 
         {/* If viewing someone else’s public card and their fetch failed */}

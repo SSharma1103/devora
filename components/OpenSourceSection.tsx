@@ -6,7 +6,7 @@ import { Github, Loader2, GitPullRequest, Plus } from "lucide-react";
 import OpenSource from "./OpenSource";
 
 export default function OpenSourceSection() {
-  const [gitData, setGitData] = useState(null);
+  const [gitData, setGitData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);

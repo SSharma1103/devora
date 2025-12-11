@@ -142,12 +142,15 @@ export function processGitHubStats(stats: any) {
     stars: stats.repositories.nodes.reduce((acc: number, repo: any) => acc + repo.stargazerCount, 0),
     followers: stats.followers.totalCount,
     following: stats.following.totalCount,
-    
+    privateRepos: stats.repositories.nodes.filter((repo: any) => repo.isPrivate).length,
+    commits: stats.contributionsCollection.totalCommitContributions,
+    contributionsNotOwned: stats.contributionsCollection.pullRequestContributionsByRepository.filter((item: any) => item.repository.owner.login !== stats.login).length,
+    contributionsThisYear: stats.contributionsCollection.contributionCalendar.weeks.filter((week: any) => new Date(week.contributionDays[0].date).getFullYear() === new Date().getFullYear()).length,
+    totalContributions: stats.contributionsCollection.contributionCalendar.totalContributions,
     // NEW DATA
     languages, // Json
     osContributions, // Json
     pullRequests: stats.pullRequests.totalCount,
-    totalContributions: stats.contributionsCollection.contributionCalendar.totalContributions,
     commitHistory,
     accountAge,
   };

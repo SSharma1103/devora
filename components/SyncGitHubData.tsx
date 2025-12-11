@@ -7,7 +7,7 @@ export default function SyncGitHubData() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [data, setData] = useState(null);
+  const [data, setData] = useState<any>(null);
   const { data: session } = useSession();
 
   const handleSync = async () => {

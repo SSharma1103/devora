@@ -8,6 +8,7 @@ import PublicProfileHeader from "@/components/PublicProfileHeader";
 import WorkExperience from "@/components/WorkExperience";
 import Projects from "@/components/Projects";
 import GitHub from "@/components/GitHub";
+import OpenSource from "@/components/OpenSource";
 import LeetCodeStatsCard from "@/components/Leetcode";
 import RightSidebar from "@/components/RightSidebar";
 import GithubPublic from "@/components/PublicGitData";
@@ -108,6 +109,8 @@ export default function UserProfilePage() {
 
                       {/* Public GitHub card – username is guaranteed string here */}
                       <GithubPublic username={username} />
+
+                      <OpenSource data={user.gitdata.osContributions} />
 
                       <LeetCodeStatsCard
                         leetcodeUsername={user.pdata?.socials?.leetcode}

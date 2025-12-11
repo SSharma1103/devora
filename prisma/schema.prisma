@@ -44,6 +44,11 @@ model Gitdata {
   lastSynced            DateTime @default(now()) @updatedAt
   privateRepos          Int?
   totalContributions    Int?
+  languages       Json?  // Stores { "TypeScript": 40, "Rust": 20 }
+  topRepos        Json?  // Stores top 5 owned repos details
+  osContributions Json?  // Stores list of repos they contributed to (The OS Section)
+  pullRequests    Int?   // Total PRs opened
+  codeReviews     Int?   // Total code reviews conducted
   user                  User?    @relation(fields: [userId], references: [id])
 }
 

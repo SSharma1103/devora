@@ -16,7 +16,7 @@ export const authOptions: AuthOptions = {
       authorization: {
         params: {
           scope: "read:user user:email repo",
-        },
+        },   
       },
       httpOptions: {
         timeout: 10000,
@@ -43,7 +43,6 @@ export const authOptions: AuthOptions = {
       let email: string | null = null;
       let name: string | null = null;
       let pfp: string | null = null;
-      // Initialize banner (Standard OAuth providers usually don't send a banner, so this stays null)
       let banner: string | null = null;
 
       const isGoogle = "sub" in oauth;
@@ -63,66 +62,78 @@ export const authOptions: AuthOptions = {
         pfp = oauth.avatar_url ?? null;
       }
 
-      // Explicit account linking using cookie
+      // --- 1. Find or Create User (Your existing logic) ---
+      let user = null;
+
+      // Check for linking cookie
       if (provider === "github") {
         try {
           const cookieStore = await cookies();
           const linkUserId = cookieStore.get("link_account_user_id")?.value;
-
           if (linkUserId) {
-            const userToLink = await prisma.user.findUnique({
-              where: { id: parseInt(linkUserId) },
-            });
-
-            if (userToLink && !userToLink.githubId) {
-              await prisma.user.update({
-                where: { id: userToLink.id },
-                data: {
-                  githubId: providerId,
-                  name: userToLink.name ?? name,
-                  pfp: userToLink.pfp ?? pfp,
-                  // We don't overwrite banner here to preserve existing user banner if they have one
-                },
-              });
-
-              cookieStore.delete("link_account_user_id");
-              return true;
-            }
+             user = await prisma.user.update({
+               where: { id: parseInt(linkUserId) },
+               data: { githubId: providerId, name: name ?? undefined, pfp: pfp ?? undefined }
+             });
+             cookieStore.delete("link_account_user_id");
           }
         } catch {}
       }
 
-      // 1. Lookup by provider
-      let user = await prisma.user.findUnique({
-        where: { [providerIdField]: providerId } as any, // safe here only
-      });
-
-      if (user) return true;
-
-      // 2. Lookup by email
-      if (email) {
+      // Normal lookup
+      if (!user) {
         user = await prisma.user.findUnique({
-          where: { email },
+          where: { [providerIdField]: providerId } as any,
         });
+      }
 
+      // Email lookup fallback
+      if (!user && email) {
+        user = await prisma.user.findUnique({ where: { email } });
         if (user) {
-          await prisma.user.update({
+          // Link provider to existing email user
+          user = await prisma.user.update({
             where: { id: user.id },
             data: { [providerIdField]: providerId },
           });
-
-          return true;
         }
       }
 
-      // 3. Create new user
-      await prisma.user.create({
-        data: {
-          [providerIdField]: providerId,
-          email,
-          name,
-          pfp,
-          banner, // Added banner here
+      // Create new user if still not found
+      if (!user) {
+        user = await prisma.user.create({
+          data: {
+            [providerIdField]: providerId,
+            email,
+            name,
+            pfp,
+            banner,
+          },
+        });
+      }
+
+      // --- 2. NEW: Save the Account/Token to DB ---
+      // This ensures we have the token stored permanently to use later
+      await prisma.account.upsert({
+        where: {
+          provider_providerAccountId: {
+            provider: account.provider,
+            providerAccountId: account.providerAccountId,
+          },
+        },
+        update: {
+          access_token: account.access_token,
+          refresh_token: account.refresh_token,
+          expires_at: account.expires_at,
+        },
+        create: {
+          userId: user.id,
+          type: account.type,
+          provider: account.provider,
+          providerAccountId: account.providerAccountId,
+          access_token: account.access_token,
+          refresh_token: account.refresh_token,
+          expires_at: account.expires_at,
         },
       });
 

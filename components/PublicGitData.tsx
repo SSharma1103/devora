@@ -12,13 +12,14 @@ import {
   AlertCircle,
   RefreshCw
 } from "lucide-react";
+import {ApiResponse, Gitdata} from "@/types"
 
 interface GithubPublicProps {
   username: string;
 }
 
 export default function GithubPublic({ username }: GithubPublicProps) {
-  const [gitData, setGitData] = useState<any>(null);
+  const [gitData, setGitData] = useState<Gitdata|null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,11 +32,11 @@ export default function GithubPublic({ username }: GithubPublicProps) {
         const res = await fetch(`/api/gitdata/${encodeURIComponent(username)}`, {
           method: "GET",
         });
-        const data = await res.json();
+        const data = (await res.json())as ApiResponse<Gitdata>
 
         if (!res.ok) throw new Error(data.error || "Failed to fetch data");
 
-        setGitData(data.data);
+        if (data.data) setGitData(data.data);
         setError(null);
       } catch (err: any) {
         setError(err.message || "Failed to fetch data");

@@ -14,7 +14,7 @@ import {
   Loader2,
   AlertCircle 
 } from "lucide-react";
-import {Pdata,Socials} from "@/types"
+import {Pdata,Socials,ApiResponse} from "@/types"
 
 
 interface SidebarProps {
@@ -37,8 +37,8 @@ export default function RightSidebar({ pdata: pdataProp }: SidebarProps) {
       try {
         const res = await fetch("/api/pdata");
         if (!res.ok) throw new Error("Failed to fetch personal data");
-        const json = await res.json();
-        setPdata(json.data);
+        const json = (await res.json())as ApiResponse<Pdata>
+        if(json.data)setPdata(json.data);
       } catch (err: any) {
         setError(err.message);
       } finally {

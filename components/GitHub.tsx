@@ -12,13 +12,14 @@ import {
   Github as GithubIcon,
   AlertCircle
 } from "lucide-react";
+import {Gitdata,ApiResponse} from "@/types"
 
 interface GithubProps {
-  gitData?: any; // Optional prop for public view
+  gitData?: Gitdata; // Optional prop for public view
 }
 
 export default function Github({ gitData: gitDataProp }: GithubProps) {
-  const [gitData, setGitData] = useState<any>(null);
+  const [gitData, setGitData] = useState<Gitdata|null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,11 +34,11 @@ export default function Github({ gitData: gitDataProp }: GithubProps) {
     const fetchData = async () => {
       try {
         const res = await fetch("/api/gitdata/sync", { method: "GET" });
-        const data = await res.json();
+        const data = (await res.json()) as ApiResponse<Gitdata>;
 
         if (!res.ok) throw new Error(data.error || "Failed to fetch data");
 
-        setGitData(data.data);
+        if (data.data) setGitData(data.data);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -52,11 +53,11 @@ export default function Github({ gitData: gitDataProp }: GithubProps) {
     try {
       setSyncing(true);
       const res = await fetch("/api/gitdata/sync", { method: "POST" });
-      const data = await res.json();
+      const data = (await res.json()) as ApiResponse<Gitdata>;
 
       if (!res.ok) throw new Error(data.error || "Failed to sync data");
 
-      setGitData(data.data);
+      if (data.data) setGitData(data.data)
       setError(null);
     } catch (err: any) {
       setError(err.message);

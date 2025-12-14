@@ -55,3 +55,42 @@ export type WorkExpItem = {
 
 // The Union Type
 export type FeedItem = ProjectItem | WorkExpItem;
+
+export interface LeetCodeProfile {
+  totalSolved: number;
+  totalQuestions: number;
+  easySolved: number;
+  totalEasy: number;
+  mediumSolved: number;
+  totalMedium: number;
+  hardSolved: number;
+  totalHard: number;
+  ranking: number;
+  contributionPoint: number;
+  reputation: number;
+  submissionCalendar: Record<string, number>;
+}
+
+export interface Badge {
+  id: string;
+  displayName: string;
+  icon: string;
+  creationDate?: string;
+}
+
+export interface LeetCodeBadges {
+  badges: Badge[];
+  activeBadge: Badge | null;
+  upcomingBadges: Badge[];
+}
+export interface PdataForm {
+  about: string;
+  devstats: string;
+  stack: string;
+  socials: {
+    github: string;
+    linkedin: string;
+    twitter: string;
+    portfolio: string;
+  };
+}

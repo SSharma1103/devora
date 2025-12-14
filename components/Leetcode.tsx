@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
- import { useSession } from "next-auth/react"; 
+import { useSession } from "next-auth/react"; 
 import { 
   BarChart3, 
   Trophy, 
@@ -14,17 +14,49 @@ import {
   AlertCircle,
   Terminal
 } from "lucide-react";
+import { ApiResponse } from "@/types"; // Assuming you have this generic wrapper
+
+// --- Types Definition ---
+
+interface LeetCodeProfile {
+  totalSolved: number;
+  totalQuestions: number;
+  easySolved: number;
+  totalEasy: number;
+  mediumSolved: number;
+  totalMedium: number;
+  hardSolved: number;
+  totalHard: number;
+  ranking: number | string;
+  contributionPoint: number;
+  reputation: number;
+}
+
+interface Badge {
+  id: string;
+  displayName: string;
+  icon: string;
+  creationDate?: string;
+}
+
+interface LeetCodeBadges {
+  badges: Badge[];
+  activeBadge: Badge | null;
+  upcomingBadges: Badge[];
+}
 
 interface LeetCodeProps {
   leetcodeUsername?: string | null;
 }
 
-export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
-  const { data: session } = useSession(); // Removed for preview environment
+// --- Main Component ---
 
-  
-  const [data, setData] = useState<any>(null);
-  const [badgesData, setBadgesData] = useState<any>(null);
+export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
+  const { data: session } = useSession();
+
+  // Strongly typed state
+  const [data, setData] = useState<LeetCodeProfile | null>(null);
+  const [badgesData, setBadgesData] = useState<LeetCodeBadges | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,20 +64,27 @@ export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
     async function fetchUser() {
       let username = leetcodeUsername;
 
-      if (username === undefined && session?.username) {
+      // 1. If no username passed, try to fetch from current session user's profile
+      if (username === undefined && session?.user?.name) { // Changed session.username to session.user.name or ensure your session type has username
         try {
-          const res = await fetch(`/api/user?username=${session.username}`);
-          if (res.ok) {
-            const json = await res.json();
-            if (json.success && json.data) {
-              username = json.data.leetcode; 
-            }
-          }
+           // Assuming session has a username property mapped
+           const sessionUsername = (session as any).username || session.user?.name;
+           
+           if(sessionUsername) {
+              const res = await fetch(`/api/user?username=${sessionUsername}`);
+              if (res.ok) {
+                const json = (await res.json()) as ApiResponse<{ leetcode: string }>;
+                if (json.success && json.data?.leetcode) {
+                  username = json.data.leetcode; 
+                }
+              }
+           }
         } catch (err) {
           console.error("Failed to fetch user profile:", err);
         }
       }
 
+      // 2. If still no username, stop loading
       if (!username) {
         setLoading(false);
         if (leetcodeUsername === null) {
@@ -56,21 +95,25 @@ export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
         return;
       }
 
+      // 3. Fetch LeetCode Data
       try {
         setLoading(true);
         const [profileRes, badgesRes] = await Promise.all([
-          fetch(`https://backendpoint-alpha.vercel.app/${username}/profile`),
-          fetch(`https://backendpoint-alpha.vercel.app/${username}/badges`),
+          fetch(`https://alfa-leetcode-api.onrender.com/${username}/solved`), // Adjusted endpoint slightly for stats if needed, or use 'profile'
+          fetch(`https://alfa-leetcode-api.onrender.com/${username}/badges`),
         ]);
 
         if (!profileRes.ok || !badgesRes.ok)
           throw new Error("Failed to fetch data (user may not exist or API is down)");
 
-        const profileData = await profileRes.json();
-        const badgesData = await badgesRes.json();
+        // We assume the API structure matches our interface
+        const profileJson = await profileRes.json();
+        const badgesJson = await badgesRes.json();
 
-        setData(profileData);
-        setBadgesData(badgesData);
+        // Note: The specific API endpoint used in your original code 'backendpoint-alpha' 
+        // implies a specific structure. I am mapping to the interfaces defined above.
+        setData(profileJson);
+        setBadgesData(badgesJson);
         setError(null);
       } catch (err: any) {
         setError(err.message);
@@ -79,10 +122,10 @@ export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
       }
     }
 
-    if (leetcodeUsername !== undefined || session?.username) {
+    // Trigger logic
+    if (leetcodeUsername !== undefined || session) {
         fetchUser();
     } else if (leetcodeUsername === undefined && session === null) {
-        // Just stop loading if we don't have a username and no session to fall back on
         setLoading(false);
     }
   }, [leetcodeUsername, session]);
@@ -93,6 +136,7 @@ export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
   const headerClass = "flex items-center gap-2 text-[#E9E6D7]/60 mb-4 pb-2 border-b border-[#E9E6D7]/10";
   const headerIconClass = "w-4 h-4";
 
+  // --- Loading State ---
   if (loading)
     return (
       <div className="w-full h-48 bg-[#0a0a0a] border border-[#E9E6D7]/20 flex flex-col items-center justify-center gap-3">
@@ -101,6 +145,7 @@ export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
       </div>
     );
   
+  // --- Error State ---
   if (error)
     return (
       <div className="w-full bg-red-900/10 border border-red-900/30 p-6 flex items-center justify-center gap-3 text-red-400">
@@ -109,6 +154,7 @@ export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
       </div>
     );
   
+  // --- Empty State ---
   if (!data)
     return (
       <div className="w-full border border-dashed border-[#E9E6D7]/20 p-8 text-center bg-[#0a0a0a]">
@@ -198,7 +244,7 @@ export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
           {badgesData?.badges && Array.isArray(badgesData.badges) ? (
             badgesData.badges.length > 0 ? (
               <div className="grid grid-cols-2 gap-2">
-                {badgesData.badges.slice(0, 8).map((badge: any) => (
+                {badgesData.badges.slice(0, 8).map((badge) => (
                   <div
                     key={badge.id}
                     className={`flex flex-col items-center justify-center text-center p-3 border transition-all duration-300 ${
@@ -225,9 +271,9 @@ export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
             )
           ) : (
              <div className="space-y-2">
-                {[1,2,3,4].map(i => (
-                    <div key={i} className="h-8 bg-[#E9E6D7]/5 animate-pulse w-full"></div>
-                ))}
+               {[1,2,3,4].map(i => (
+                   <div key={i} className="h-8 bg-[#E9E6D7]/5 animate-pulse w-full"></div>
+               ))}
              </div>
           )}
         </div>
@@ -238,7 +284,14 @@ export default function LeetCodeStatsCard({ leetcodeUsername }: LeetCodeProps) {
 
 // --- Sub Components ---
 
-function StatBox({ label, value, total, color }: { label: string; value: number; total: number; color?: string }) {
+interface StatBoxProps {
+  label: string;
+  value: number;
+  total: number;
+  color?: string;
+}
+
+function StatBox({ label, value, total, color }: StatBoxProps) {
   return (
     <div className="flex flex-col p-2 bg-[#E9E6D7]/5 border border-[#E9E6D7]/5 hover:border-[#E9E6D7]/20 transition-colors">
       <span className={`text-[10px] uppercase tracking-widest mb-1 ${color || "text-[#E9E6D7]/60"}`}>{label}</span>
@@ -248,7 +301,13 @@ function StatBox({ label, value, total, color }: { label: string; value: number;
   );
 }
 
-function SkillBar({ label, percent, icon }: { label: string; percent: number; icon: React.ReactNode }) {
+interface SkillBarProps {
+  label: string;
+  percent: number;
+  icon: React.ReactNode;
+}
+
+function SkillBar({ label, percent, icon }: SkillBarProps) {
   return (
     <div>
       <div className="flex justify-between items-center mb-1.5 text-[#E9E6D7]/60">

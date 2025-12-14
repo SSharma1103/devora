@@ -12,6 +12,13 @@ import {
   CheckCircle2,
   Cpu,
 } from "lucide-react";
+// Import the shared generic type
+import { ApiResponse } from "@/types";
+
+// Define the specific data expected from this API call
+interface SetUsernameResponse {
+  username: string;
+}
 
 export default function SetupUsername() {
   // --- Real hooks ---
@@ -21,6 +28,7 @@ export default function SetupUsername() {
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  
   // Stable Sys.Id per mount, not per render
   const [sysId] = useState(() =>
     Math.random().toString(36).substring(7).toUpperCase()
@@ -60,9 +68,10 @@ export default function SetupUsername() {
         body: JSON.stringify({ username: normalizedUsername }),
       });
 
-      const data = await response.json();
+      // === TYPE SAFETY APPLIED HERE ===
+      const data = (await response.json()) as ApiResponse<SetUsernameResponse>;
 
-      if (!response.ok) {
+      if (!response.ok || !data.success) {
         setError(data.error || "Failed to set username");
         setLoading(false);
         return;
@@ -112,7 +121,7 @@ export default function SetupUsername() {
     );
   }
 
-  // Try both shapes: session.user.username and session.username
+  // Try both shapes: session.user.username and session.username (if customized)
   const existingUsername =
     (session.user as any)?.username ?? (session as any)?.username ?? null;
 

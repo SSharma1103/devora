@@ -1,18 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, User, Users } from "lucide-react"; // Import Users
+import { Search, User, Users } from "lucide-react";
 import Sidebar from "@/components/sidebar";
 import Link from "next/link";
-import { useSession } from "next-auth/react"; // Import useSession
-import { useRouter } from "next/navigation"; // Import useRouter
+import { useSession } from "next-auth/react"; 
+import { useRouter } from "next/navigation"; 
+import { ApiResponse ,UserType } from "@/types";
 
-interface UserType {
-  id: number;
-  name: string | null;
-  username: string;
-  pfp?: string | null;
-}
 
 export default function ConnectionsPage() {
   const [activeTab, setActiveTab] = useState<"followers" | "following">(
@@ -50,11 +45,11 @@ export default function ConnectionsPage() {
         endpoint += `&q=${encodeURIComponent(search)}`;
       }
       const res = await fetch(endpoint);
-      const data = await res.json();
+      const data =( await res.json())as ApiResponse<UserType[]>;
 
       if (!res.ok) throw new Error(data.error || "Failed to fetch connections");
 
-      setUsers(data.data || []);
+      if(data.data)setUsers(data.data );
       setError(null);
     } catch (err: any) {
       setError(err.message);

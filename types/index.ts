@@ -94,3 +94,26 @@ export interface PdataForm {
     portfolio: string;
   };
 }
+export interface UserProfile {
+  id: number;
+  name: string | null;
+  username: string;
+  pfp: string | null;
+  banner: string | null;
+  gitdata: any;
+  pdata: any;
+  projects: any[];
+  workExp: any[];
+  _count: {
+    followers: number;
+    following: number;
+  };
+  isFollowedByCurrentUser: boolean;
+  isCurrentUser: boolean;
+}
+export interface UserType {
+  id: number;
+  name: string | null;
+  username: string;
+  pfp?: string | null;
+}

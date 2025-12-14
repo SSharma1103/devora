@@ -17,39 +17,17 @@ import {
   Search,
   ArrowLeft,
 } from "lucide-react";
-
-interface UserInfo {
-  name: string | null;
-  username: string;
-  pfp: string | null;
-}
-
-interface ProjectItem {
-  id: number;
-  title: string;
-  description: string | null;
-  link: string | null;
-  gitlink: string | null;
-  createdAt: string;
-  user: UserInfo;
-}
-
-interface WorkExpItem {
-  id: number;
-  title: string;
-  companyName: string | null;
-  description: string | null;
-  duration: string | null;
-  image: string | null;
-  createdAt: string;
-  user: UserInfo;
-}
-
-type FeedItem =
-  | { type: "project"; item: ProjectItem }
-  | { type: "workexp"; item: WorkExpItem };
+// 1. Import Shared Types
+import { 
+  FeedItem, 
+  ProjectItem, 
+  WorkExpItem, 
+  FeedUser, 
+  ApiResponse 
+} from "@/types";
 
 export default function TimelinePage() {
+  // 2. Use the imported FeedItem type for state
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,9 +46,15 @@ export default function TimelinePage() {
     const fetchFeed = async () => {
       try {
         setLoading(true);
-        const res = await fetch("/api/timeline");
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to fetch feed");
+        const res = await fetch("/api/feed"); // Assuming this is the correct endpoint path
+        
+        // 3. Type the API Response
+        const data = (await res.json()) as ApiResponse<FeedItem[]>;
+        
+        if (!res.ok || !data.success) {
+           throw new Error(data.error || "Failed to fetch feed");
+        }
+
         setFeed(data.data || []);
         setError(null);
       } catch (err: any) {
@@ -158,6 +142,7 @@ export default function TimelinePage() {
                 ></div>
               </div>
 
+              {/* 4. Pass Correctly Typed Items */}
               {isProject ? (
                 <TimelineProjectCard project={feedItem.item} />
               ) : (
@@ -238,12 +223,17 @@ export default function TimelinePage() {
 
 // --- Feed Item Card Components ---
 
-function TimelineProjectCard({ project }: { project: ProjectItem }) {
+// 5. Use ProjectItem['item'] because our shared type wraps it
+function TimelineProjectCard({ project }: { project: ProjectItem['item'] }) {
   return (
     <div className="bg-[#050505] border border-[#E9E6D7]/10 p-6 group hover:border-[#E9E6D7]/30 transition-all duration-300 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-16 h-16 bg-linear-to-bl from-[#E9E6D7]/5 to-transparent pointer-events-none"></div>
+      <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#E9E6D7]/5 to-transparent pointer-events-none"></div>
 
-      <CardHeader user={project.user} timestamp={project.createdAt} type="Project" />
+      <CardHeader 
+        user={project.user} 
+        timestamp={project.createdAt.toString()} 
+        type="Project" 
+      />
 
       <div className="mt-5 pl-11">
         <div className="flex items-start justify-between gap-4 mb-3">
@@ -293,14 +283,15 @@ function TimelineProjectCard({ project }: { project: ProjectItem }) {
   );
 }
 
-function TimelineWorkExpCard({ workExp }: { workExp: WorkExpItem }) {
+// 6. Use WorkExpItem['item']
+function TimelineWorkExpCard({ workExp }: { workExp: WorkExpItem['item'] }) {
   return (
     <div className="bg-[#050505] border border-[#E9E6D7]/10 p-6 group hover:border-[#E9E6D7]/30 transition-all duration-300 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-16 h-16 bg-linear-to-bl from-[#E9E6D7]/5 to-transparent pointer-events-none"></div>
+      <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#E9E6D7]/5 to-transparent pointer-events-none"></div>
 
       <CardHeader
         user={workExp.user}
-        timestamp={workExp.createdAt}
+        timestamp={workExp.createdAt.toString()}
         type="Experience"
       />
 
@@ -344,11 +335,12 @@ function TimelineWorkExpCard({ workExp }: { workExp: WorkExpItem }) {
   );
 }
 
+// 7. Use the shared FeedUser type
 function CardHeader({
   user,
   timestamp,
 }: {
-  user: UserInfo;
+  user: FeedUser;
   timestamp: string;
   type: string;
 }) {
@@ -371,7 +363,7 @@ function CardHeader({
 
   const userImage = user.pfp || "/default-avatar.png";
   const userFirstInitial =
-    user.name?.charAt(0) || user.username.charAt(0).toUpperCase();
+    user.name?.charAt(0) || user.username?.charAt(0).toUpperCase() || "?";
 
   return (
     <div className="flex items-start justify-between">
@@ -380,7 +372,7 @@ function CardHeader({
           {user.pfp ? (
             <img
               src={userImage}
-              alt={user.username}
+              alt={user.username || "User"}
               className="w-9 h-9 rounded-sm border border-[#E9E6D7]/20 object-cover group-hover/user:border-[#E9E6D7] transition-all"
             />
           ) : (

@@ -1,7 +1,7 @@
 // app/api/gitdata/[username]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-
+import { ApiResponse, Gitdata } from "@/types";
 export async function GET(
   _req: NextRequest,
   context: { params: Promise<{ username: string }> }
@@ -10,8 +10,8 @@ export async function GET(
     const { username } = await context.params;
 
     if (!username) {
-      return NextResponse.json(
-        { error: "Username is required" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success:false,error: "Username is required" },
         { status: 400 }
       );
     }
@@ -23,8 +23,8 @@ export async function GET(
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
+      return NextResponse.json<ApiResponse<null>>(
+        {success:false, error: "User not found" },
         { status: 404 }
       );
     }
@@ -35,19 +35,19 @@ export async function GET(
     });
 
     if (!gitData) {
-      return NextResponse.json(
-        { error: "Git data not found. Please sync first." },
+      return NextResponse.json<ApiResponse<null>>(
+        { success:false,error: "Git data not found. Please sync first." },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ success: true, data: gitData });
+    return NextResponse.json<ApiResponse<Gitdata>>({ success: true, data: gitData });
   } catch (error) {
     console.error("Error fetching git data by username:", error);
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
-      { error: "Failed to fetch git data", message: errorMessage },
+    return NextResponse.json<ApiResponse<null>>(
+      { success:false,error: "Failed to fetch git data", message: errorMessage },
       { status: 500 }
     );
   }

@@ -1,0 +1,57 @@
+import { Gitdata, User, WorkExp, Project, Pdata } from "@prisma/client";
+
+export type { Gitdata, User, WorkExp, Project, Pdata };
+
+export type BasicUser = Pick<User, "id" | "name" | "username" | "pfp">;
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+export interface CreateWorkExpReq{
+    title: string;
+  duration?: string | null;    
+  companyName?: string | null;
+  description?: string | null;
+  image?: string | null;
+}
+
+export interface CreateProjectReq{
+    title: string,
+    description?: string|null,
+    link?: string|null,
+    gitlink?: string|null,
+}
+export interface Socials {
+  github?: string;
+  linkedin?: string;
+  twitter?: string;
+  portfolio?: string;
+  email?: string;
+  leetcode?: string;
+  [key: string]: string | undefined; // Allows other keys just in case
+}
+export type FeedUser = {
+  name: string | null;
+  username: string | null;
+  pfp: string | null;
+};
+
+// Specific Item Types
+export type ProjectItem = {
+  type: "project";
+  timestamp: Date;
+  item: Project & { user: FeedUser };
+};
+
+export type WorkExpItem = {
+  type: "workexp";
+  timestamp: Date;
+  item: WorkExp & { user: FeedUser };
+};
+
+// The Union Type
+export type FeedItem = ProjectItem | WorkExpItem;

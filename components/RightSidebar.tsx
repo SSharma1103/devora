@@ -14,19 +14,8 @@ import {
   Loader2,
   AlertCircle 
 } from "lucide-react";
+import {Pdata,Socials} from "@/types"
 
-interface Pdata {
-  about?: string;
-  devstats?: string;
-  stack?: string;
-  socials?: {
-    github?: string;
-    linkedin?: string;
-    twitter?: string;
-    portfolio?: string;
-    email?: string;
-  };
-}
 
 interface SidebarProps {
   pdata?: Pdata | null;
@@ -94,7 +83,7 @@ export default function RightSidebar({ pdata: pdataProp }: SidebarProps) {
       </aside>
     );
 
-  const socials = pdata.socials || {};
+  const socials = (pdata.socials as unknown as Socials) || {};
 
   return (
     <aside className="hidden lg:flex w-80 flex-col gap-5 ml-8 sticky top-24 h-fit pb-10">

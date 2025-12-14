@@ -10,29 +10,23 @@ import {
   Calendar,
   Building2
 } from "lucide-react";
-
-interface WorkExp {
-  id?: number;
-  title: string;
-  duration?: string;
-  description?: string;
-  companyName?: string;
-  image?: string;
-  createdAt?: string;
-}
+// 1. Import shared types
+import { WorkExp, CreateWorkExpReq, ApiResponse } from "@/types";
 
 interface ExperienceProps {
   workExpData?: WorkExp[];
 }
 
 export default function Experience({ workExpData }: ExperienceProps) {
+  // 2. Strictly type the state
   const [experiences, setExperiences] = useState<WorkExp[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [newExp, setNewExp] = useState({
+  // 3. Type the form state (matches your API input)
+  const [newExp, setNewExp] = useState<CreateWorkExpReq>({
     title: "",
     duration: "",
     companyName: "",
@@ -50,13 +44,18 @@ export default function Experience({ workExpData }: ExperienceProps) {
     const fetchExperience = async () => {
       try {
         const res = await fetch("/api/workexp");
-        const data = await res.json();
+        // 4. Type the API response
+        const data: ApiResponse<WorkExp[]> = await res.json();
 
         if (!res.ok) throw new Error(data.error || "Failed to fetch work experience");
 
-        setExperiences(data.data);
-      } catch (err: any) {
-        setError(err.message);
+        if (data.data) {
+          setExperiences(data.data);
+        }
+      } catch (err) {
+        // 5. Safe error handling (no 'any')
+        if (err instanceof Error) setError(err.message);
+        else setError("An unknown error occurred");
       } finally {
         setLoading(false);
       }
@@ -80,15 +79,22 @@ export default function Experience({ workExpData }: ExperienceProps) {
         body: JSON.stringify(newExp),
       });
 
-      const data = await res.json();
+      // 6. Type the POST response (Single object)
+      const data: ApiResponse<WorkExp> = await res.json();
+      
       if (!res.ok) throw new Error(data.error || "Failed to add work experience");
 
-      setExperiences((prev) => [data.data, ...prev]);
+      if (data.data) {
+        setExperiences((prev) => [data.data!, ...prev]);
+      }
+      
+      // Reset form
       setNewExp({ title: "", duration: "", companyName: "", description: "", image: "" });
       setShowForm(false);
       setError(null);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      if (err instanceof Error) setError(err.message);
+      else setError("Failed to add experience");
     } finally {
       setAdding(false);
     }
@@ -121,7 +127,7 @@ export default function Experience({ workExpData }: ExperienceProps) {
           </div>
         </div>
 
-        {/* Add Button (Only if owner) */}
+        {/* Add Button (Only if owner - indicated by no workExpData prop passed from outside) */}
         {!workExpData && (
           <button
             onClick={() => setShowForm(!showForm)}
@@ -162,7 +168,8 @@ export default function Experience({ workExpData }: ExperienceProps) {
                   type="text"
                   placeholder="Ex: Senior Engineer"
                   className={inputClasses}
-                  value={newExp.title}
+                  // 7. FIX: Handle null values for inputs
+                  value={newExp.title || ""}
                   onChange={(e) => setNewExp({ ...newExp, title: e.target.value })}
                 />
               </div>
@@ -172,7 +179,7 @@ export default function Experience({ workExpData }: ExperienceProps) {
                   type="text"
                   placeholder="Ex: Acme Corp"
                   className={inputClasses}
-                  value={newExp.companyName}
+                  value={newExp.companyName || ""}
                   onChange={(e) => setNewExp({ ...newExp, companyName: e.target.value })}
                 />
               </div>
@@ -184,7 +191,7 @@ export default function Experience({ workExpData }: ExperienceProps) {
                 type="text"
                 placeholder="Ex: Jan 2023 - Present"
                 className={inputClasses}
-                value={newExp.duration}
+                value={newExp.duration || ""}
                 onChange={(e) => setNewExp({ ...newExp, duration: e.target.value })}
               />
             </div>
@@ -194,7 +201,7 @@ export default function Experience({ workExpData }: ExperienceProps) {
               <textarea
                 placeholder="Key responsibilities and achievements..."
                 className={`${inputClasses} h-24 resize-none`}
-                value={newExp.description}
+                value={newExp.description || ""}
                 onChange={(e) => setNewExp({ ...newExp, description: e.target.value })}
               />
             </div>
@@ -205,7 +212,7 @@ export default function Experience({ workExpData }: ExperienceProps) {
                 type="text"
                 placeholder="https://..."
                 className={inputClasses}
-                value={newExp.image}
+                value={newExp.image || ""}
                 onChange={(e) => setNewExp({ ...newExp, image: e.target.value })}
               />
             </div>

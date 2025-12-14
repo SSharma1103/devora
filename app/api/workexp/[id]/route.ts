@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { ApiResponse ,WorkExp } from "@/types";
 
 // Define the type for the route context
 type RouteParams = { params: Promise<{ id: string }> };
@@ -16,8 +17,8 @@ export async function GET(
     const { id } = await params;
 
     if (!session?.userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success:false,error: "Unauthorized" },
         { status: 401 }
       );
     }
@@ -30,17 +31,17 @@ export async function GET(
     });
 
     if (!workExp) {
-      return NextResponse.json(
-        { error: "Work experience not found" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success:false,error: "Work experience not found" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ success: true, data: workExp });
+    return NextResponse.json<ApiResponse<WorkExp>>({ success: true, data: workExp });
   } catch (error: any) {
     console.error("Error fetching work experience:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch work experience", message: error.message },
+    return NextResponse.json<ApiResponse<null>>(
+      { success:false,error: "Failed to fetch work experience", message: error.message },
       { status: 500 }
     );
   }
@@ -56,8 +57,8 @@ export async function PUT(
     const { id } = await params;
 
     if (!session?.userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success:false,error: "Unauthorized" },
         { status: 401 }
       );
     }
@@ -74,8 +75,8 @@ export async function PUT(
     });
 
     if (!existingWorkExp) {
-      return NextResponse.json(
-        { error: "Work experience not found" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success:false,error: "Work experience not found" },
         { status: 404 }
       );
     }
@@ -91,11 +92,11 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json({ success: true, data: workExp });
+    return NextResponse.json<ApiResponse<WorkExp>>({ success: true, data: workExp });
   } catch (error: any) {
     console.error("Error updating work experience:", error);
-    return NextResponse.json(
-      { error: "Failed to update work experience", message: error.message },
+    return NextResponse.json<ApiResponse<null>>(
+      { success:false,error: "Failed to update work experience", message: error.message },
       { status: 500 }
     );
   }
@@ -111,8 +112,8 @@ export async function DELETE(
     const { id } = await params;
 
     if (!session?.userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success:false,error: "Unauthorized" },
         { status: 401 }
       );
     }
@@ -126,8 +127,8 @@ export async function DELETE(
     });
 
     if (!existingWorkExp) {
-      return NextResponse.json(
-        { error: "Work experience not found" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success:false ,error: "Work experience not found" },
         { status: 404 }
       );
     }
@@ -136,11 +137,11 @@ export async function DELETE(
       where: { id: parseInt(id) },
     });
 
-    return NextResponse.json({ success: true, message: "Work experience deleted" });
+    return NextResponse.json<ApiResponse<null>>({ success: true, message: "Work experience deleted" });
   } catch (error: any) {
     console.error("Error deleting work experience:", error);
-    return NextResponse.json(
-      { error: "Failed to delete work experience", message: error.message },
+    return NextResponse.json<ApiResponse<null>>(
+      { success:false,error: "Failed to delete work experience", message: error.message },
       { status: 500 }
     );
   }

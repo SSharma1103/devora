@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth"; // Import
-import { authOptions } from "@/lib/auth"; // Import
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { ApiResponse, User } from "@/types";
 
 export async function GET(req: Request) {
   try {
@@ -13,7 +14,7 @@ export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
     const currentUserId = session?.userId ? parseInt(session.userId) : null;
 
-    // 🔹 If username provided → get single user
+    // 🔹 CASE 1: If username provided → get single user (Full Profile)
     if (username) {
       const user = await prisma.user.findUnique({
         where: { username },
@@ -22,7 +23,6 @@ export async function GET(req: Request) {
           gitdata: true,
           projects: true,
           workExp: true,
-          // --- Add this to count followers/following ---
           _count: {
             select: {
               followers: true,
@@ -33,7 +33,10 @@ export async function GET(req: Request) {
       });
 
       if (!user) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
+        return NextResponse.json<ApiResponse<null>>(
+          { success: false, error: "User not found" }, 
+          { status: 404 }
+        );
       }
 
       // --- Check follow status ---
@@ -52,7 +55,8 @@ export async function GET(req: Request) {
 
       const isCurrentUser = currentUserId === user.id;
 
-      // --- Return user data with the new fields ---
+      // We return the User + extra boolean fields.
+      // TypeScript infers this complex return type automatically here.
       return NextResponse.json({
         success: true,
         data: {
@@ -63,9 +67,8 @@ export async function GET(req: Request) {
       });
     }
 
-    // 🔹 If q provided → partial search...
+    // 🔹 CASE 2: If q provided → partial search (Limited Fields)
     if (query) {
-      // ... (existing search logic) ...
       const users = await prisma.user.findMany({
         where: {
           OR: [
@@ -76,11 +79,15 @@ export async function GET(req: Request) {
         select: { id: true, name: true, username: true, pfp: true },
         take: 20,
       });
-      return NextResponse.json({ success: true, data: users });
+
+      // FIX: Use Pick to match the 4 selected fields
+      return NextResponse.json<ApiResponse<Pick<User, "id" | "name" | "username" | "pfp">[]>>({ 
+        success: true, 
+        data: users 
+      });
     }
 
-    // 🔹 Default → return all users...
-    // ... (existing all users logic) ...
+    // 🔹 CASE 3: Default → return recent users (Limited Fields)
     const allUsers = await prisma.user.findMany({
       select: {
         id: true,
@@ -92,12 +99,17 @@ export async function GET(req: Request) {
       orderBy: { id: "desc" },
       take: 50,
     });
-    return NextResponse.json({ success: true, data: allUsers });
+
+    // FIX: Use Pick to match the 5 selected fields
+    return NextResponse.json<ApiResponse<Pick<User, "id" | "name" | "username" | "pfp" | "createdAt">[]>>({ 
+      success: true, 
+      data: allUsers 
+    });
 
   } catch (err: any) {
     console.error("Error fetching users:", err);
-    return NextResponse.json(
-      { error: "Failed to fetch users", message: err.message },
+    return NextResponse.json<ApiResponse<null>>(
+      { success: false, error: "Failed to fetch users", message: err.message },
       { status: 500 }
     );
   }

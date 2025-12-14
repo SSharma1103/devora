@@ -12,15 +12,8 @@ import {
   Terminal,
   X
 } from "lucide-react";
+import { Project, CreateProjectReq,ApiResponse } from "@/types";
 
-interface Project {
-  id?: number;
-  title: string;
-  description?: string;
-  link?: string;
-  gitlink?: string;
-  createdAt?: string;
-}
 
 interface ProjectsProps {
   projectsData?: Project[];
@@ -33,7 +26,7 @@ export default function Projects({ projectsData }: ProjectsProps) {
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [newProject, setNewProject] = useState({
+  const [newProject, setNewProject] = useState<CreateProjectReq>({
     title: "",
     description: "",
     link: "",
@@ -50,11 +43,11 @@ export default function Projects({ projectsData }: ProjectsProps) {
     const fetchProjects = async () => {
       try {
         const res = await fetch("/api/projects");
-        const data = await res.json();
+        const data:ApiResponse<Project[]> = await res.json();
 
         if (!res.ok) throw new Error(data.error || "Failed to fetch projects");
 
-        setProjects(data.data);
+        setProjects(data.data|| []);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -161,7 +154,7 @@ export default function Projects({ projectsData }: ProjectsProps) {
                 type="text"
                 placeholder="Ex: AI Image Generator"
                 className={inputClasses}
-                value={newProject.title}
+                value={newProject.title||""}
                 onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
               />
             </div>
@@ -171,7 +164,7 @@ export default function Projects({ projectsData }: ProjectsProps) {
               <textarea
                 placeholder="What did you build? What stack did you use?"
                 className={`${inputClasses} h-24 resize-none`}
-                value={newProject.description}
+                value={newProject.description||""}
                 onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
               />
             </div>
@@ -183,7 +176,7 @@ export default function Projects({ projectsData }: ProjectsProps) {
                   type="text"
                   placeholder="https://..."
                   className={inputClasses}
-                  value={newProject.link}
+                  value={newProject.link||""}
                   onChange={(e) => setNewProject({ ...newProject, link: e.target.value })}
                 />
               </div>
@@ -193,7 +186,7 @@ export default function Projects({ projectsData }: ProjectsProps) {
                   type="text"
                   placeholder="https://github.com/..."
                   className={inputClasses}
-                  value={newProject.gitlink}
+                  value={newProject.gitlink||""}
                   onChange={(e) => setNewProject({ ...newProject, gitlink: e.target.value })}
                 />
               </div>

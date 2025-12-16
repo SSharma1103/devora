@@ -8,21 +8,9 @@ import GitHub from "./GitHub";
 import LeetCodeStatsCard from "./Leetcode";
 import RightSidebar from "./RightSidebar";
 import { useSession } from "next-auth/react";
+import { Pdata,ApiResponse } from "@/types";
 
 // 2. Define a type for pdata (can be expanded if needed)
-interface Pdata {
-  about?: string;
-  devstats?: string;
-  stack?: string;
-  socials?: {
-    github?: string;
-    linkedin?: string;
-    twitter?: string;
-    portfolio?: string;
-    email?: string;
-    leetcode?: string | null;
-  };
-}
 
 // 3. Add a helper function to extract username from URL or direct username
 function extractLeetCodeUsername(input: string | null | undefined): string | null {
@@ -63,8 +51,8 @@ export default function DashboardContent() {
       try {
         const res = await fetch("/api/pdata"); // API route from your files
         if (!res.ok) throw new Error("Failed to fetch personal data");
-        const json = await res.json();
-        setPdata(json.data);
+        const json = (await res.json())as ApiResponse<Pdata>;
+        if(json.data)setPdata(json.data);
       } catch (err: any) {
         console.error(err.message);
       } finally {
@@ -72,7 +60,7 @@ export default function DashboardContent() {
       }
     }
     fetchPdata();
-  }, []); // Runs once on component mount
+  }, []); 
 
   const renderContent = () => {
     switch (activeTab) {

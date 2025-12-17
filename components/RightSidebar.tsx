@@ -15,6 +15,7 @@ import {
   AlertCircle 
 } from "lucide-react";
 import {Pdata,Socials,ApiResponse} from "@/types"
+import { useResurceManager } from "@/hooks/useResourceManager";
 
 
 interface SidebarProps {
@@ -22,34 +23,15 @@ interface SidebarProps {
 }
 
 export default function RightSidebar({ pdata: pdataProp }: SidebarProps) {
-  const [pdata, setPdata] = useState<Pdata | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    items,
+    loading,
+    error,
+    seterror:setError,
+  }=useResurceManager<Pdata>("/api/pdata",pdataProp ? [pdataProp] : undefined)
 
-  useEffect(() => {
-    if (pdataProp) {
-      setPdata(pdataProp);
-      setLoading(false);
-      return;
-    }
+  const pdata = items[0] || null;
 
-    async function fetchPdata() {
-      try {
-        const res = await fetch("/api/pdata");
-        if (!res.ok) throw new Error("Failed to fetch personal data");
-        const json = (await res.json())as ApiResponse<Pdata>
-        if(json.data)setPdata(json.data);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchPdata();
-  }, [pdataProp]);
-
-  // --- Theme Constants ---
   const cardClass = "bg-[#0a0a0a] border border-[#E9E6D7]/10 p-5 hover:border-[#E9E6D7]/30 transition-colors group";
   const headerClass = "text-[10px] font-bold text-[#E9E6D7]/50 uppercase tracking-widest mb-3 flex items-center gap-2";
   const textClass = "text-[#E9E6D7]/80 text-sm leading-relaxed font-light";

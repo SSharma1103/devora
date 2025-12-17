@@ -12,20 +12,25 @@ import {
 } from "lucide-react";
 // 1. Import shared types
 import { WorkExp, CreateWorkExpReq, ApiResponse } from "@/types";
+import { useResurceManager } from "@/hooks/useResourceManager";
 
 interface ExperienceProps {
   workExpData?: WorkExp[];
 }
 
 export default function Experience({ workExpData }: ExperienceProps) {
-  // 2. Strictly type the state
-  const [experiences, setExperiences] = useState<WorkExp[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [adding, setAdding] = useState(false);
-  const [showForm, setShowForm] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // 3. Type the form state (matches your API input)
+  const {
+    items:experiences,
+    loading,
+    processing:adding,
+    error,
+    seterror:setError,
+    additem
+  }=useResurceManager<WorkExp>("/api/workexp", workExpData);
+  // 2. Strictly type the state
+  const [showForm, setShowForm] = useState(false);
+
   const [newExp, setNewExp] = useState<CreateWorkExpReq>({
     title: "",
     duration: "",
@@ -33,72 +38,20 @@ export default function Experience({ workExpData }: ExperienceProps) {
     description: "",
     image: "",
   });
-
-  useEffect(() => {
-    if (workExpData) {
-      setExperiences(workExpData);
-      setLoading(false);
-      return;
-    }
-
-    const fetchExperience = async () => {
-      try {
-        const res = await fetch("/api/workexp");
-        // 4. Type the API response
-        const data: ApiResponse<WorkExp[]> = await res.json();
-
-        if (!res.ok) throw new Error(data.error || "Failed to fetch work experience");
-
-        if (data.data) {
-          setExperiences(data.data);
-        }
-      } catch (err) {
-        // 5. Safe error handling (no 'any')
-        if (err instanceof Error) setError(err.message);
-        else setError("An unknown error occurred");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchExperience();
-  }, [workExpData]);
-
-  const handleAdd = async (e: React.FormEvent) => {
+  const handleAdd =async(e:React.FormEvent)=>{
     e.preventDefault();
     if (!newExp.title.trim()) {
       setError("Title is required");
       return;
     }
 
-    try {
-      setAdding(true);
-      const res = await fetch("/api/workexp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newExp),
-      });
-
-      // 6. Type the POST response (Single object)
-      const data: ApiResponse<WorkExp> = await res.json();
-      
-      if (!res.ok) throw new Error(data.error || "Failed to add work experience");
-
-      if (data.data) {
-        setExperiences((prev) => [data.data!, ...prev]);
-      }
-      
-      // Reset form
+    const success= await additem(newExp);
+    if (success) {
+      // Reset form on success
       setNewExp({ title: "", duration: "", companyName: "", description: "", image: "" });
       setShowForm(false);
-      setError(null);
-    } catch (err) {
-      if (err instanceof Error) setError(err.message);
-      else setError("Failed to add experience");
-    } finally {
-      setAdding(false);
     }
-  };
+    }
 
   // --- Theme Constants ---
   const inputClasses = "w-full p-3 bg-[#0a0a0a] border border-[#E9E6D7]/20 rounded-none focus:outline-none focus:border-[#E9E6D7] focus:ring-1 focus:ring-[#E9E6D7] transition-all text-[#E9E6D7] placeholder-[#E9E6D7]/30 text-sm";

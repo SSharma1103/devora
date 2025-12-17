@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -17,55 +17,35 @@ import {
   Search,
   ArrowLeft,
 } from "lucide-react";
-// 1. Import Shared Types
 import { 
   FeedItem, 
   ProjectItem, 
   WorkExpItem, 
   FeedUser, 
-  ApiResponse 
 } from "@/types";
+// 1. Import the hook
+import { useResurceManager } from "@/hooks/useResourceManager";
 
 export default function TimelinePage() {
-  // 2. Use the imported FeedItem type for state
-  const [feed, setFeed] = useState<FeedItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
   const { status } = useSession();
   const router = useRouter();
+
+  // 2. Use the hook to fetch the feed
+  // We use <any> because FeedItem likely doesn't have a top-level 'id' (it wraps item.id),
+  // which strictly violates the hook's <T extends Identifiable> constraint.
+  const { 
+    items: feedRaw, 
+    loading, 
+    error 
+  } = useResurceManager<any>("/api/feed");
+
+  // 3. Cast the items back to the correct type
+  const feed = feedRaw as FeedItem[];
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/");
-      return;
     }
-
-    if (status !== "authenticated") return;
-
-    const fetchFeed = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch("/api/feed"); // Assuming this is the correct endpoint path
-        
-        // 3. Type the API Response
-        const data = (await res.json()) as ApiResponse<FeedItem[]>;
-        
-        if (!res.ok || !data.success) {
-           throw new Error(data.error || "Failed to fetch feed");
-        }
-
-        setFeed(data.data || []);
-        setError(null);
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch feed");
-        setFeed([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFeed();
   }, [status, router]);
 
   const pageBg = "bg-black";
@@ -124,6 +104,7 @@ export default function TimelinePage() {
 
         {feed.map((feedItem, index) => {
           const isProject = feedItem.type === "project";
+          // We assume item exists and has an ID based on your types
           const key = isProject
             ? `proj-${feedItem.item.id}`
             : `work-${feedItem.item.id}`;
@@ -142,11 +123,10 @@ export default function TimelinePage() {
                 ></div>
               </div>
 
-              {/* 4. Pass Correctly Typed Items */}
               {isProject ? (
-                <TimelineProjectCard project={feedItem.item} />
+                <TimelineProjectCard project={feedItem.item as ProjectItem['item']} />
               ) : (
-                <TimelineWorkExpCard workExp={feedItem.item} />
+                <TimelineWorkExpCard workExp={feedItem.item as WorkExpItem['item']} />
               )}
             </div>
           );
@@ -223,11 +203,10 @@ export default function TimelinePage() {
 
 // --- Feed Item Card Components ---
 
-// 5. Use ProjectItem['item'] because our shared type wraps it
 function TimelineProjectCard({ project }: { project: ProjectItem['item'] }) {
   return (
     <div className="bg-[#050505] border border-[#E9E6D7]/10 p-6 group hover:border-[#E9E6D7]/30 transition-all duration-300 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#E9E6D7]/5 to-transparent pointer-events-none"></div>
+      <div className="absolute top-0 right-0 w-16 h-16 bg-linear-to-bl from-[#E9E6D7]/5 to-transparent pointer-events-none"></div>
 
       <CardHeader 
         user={project.user} 
@@ -283,11 +262,10 @@ function TimelineProjectCard({ project }: { project: ProjectItem['item'] }) {
   );
 }
 
-// 6. Use WorkExpItem['item']
 function TimelineWorkExpCard({ workExp }: { workExp: WorkExpItem['item'] }) {
   return (
     <div className="bg-[#050505] border border-[#E9E6D7]/10 p-6 group hover:border-[#E9E6D7]/30 transition-all duration-300 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#E9E6D7]/5 to-transparent pointer-events-none"></div>
+      <div className="absolute top-0 right-0 w-16 h-16 bg-linear-to-bl from-[#E9E6D7]/5 to-transparent pointer-events-none"></div>
 
       <CardHeader
         user={workExp.user}
@@ -335,10 +313,10 @@ function TimelineWorkExpCard({ workExp }: { workExp: WorkExpItem['item'] }) {
   );
 }
 
-// 7. Use the shared FeedUser type
 function CardHeader({
   user,
   timestamp,
+  type,
 }: {
   user: FeedUser;
   timestamp: string;

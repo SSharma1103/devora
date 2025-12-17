@@ -6,17 +6,17 @@ import Sidebar from "@/components/sidebar";
 import Link from "next/link";
 import { useSession } from "next-auth/react"; 
 import { useRouter } from "next/navigation"; 
-import { ApiResponse ,UserType } from "@/types";
-
+import { UserType } from "@/types";
+// 1. Import the hook
+import { useResurceManager } from "@/hooks/useResourceManager";
 
 export default function ConnectionsPage() {
-  const [activeTab, setActiveTab] = useState<"followers" | "following">(
-    "followers"
-  );
-  const [users, setUsers] = useState<UserType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [query, setQuery] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"followers" | "following">("followers");
+  
+  // Split search into input state and applied query state to keep "Enter to search" behavior
+  const [inputValue, setInputValue] = useState("");
+  const [currentQuery, setCurrentQuery] = useState("");
+
   const { status } = useSession();
   const router = useRouter();
 
@@ -27,42 +27,31 @@ export default function ConnectionsPage() {
     }
   }, [status, router]);
 
-  // Fetch data based on tab and query
-  async function fetchConnections(
-    tab: "followers" | "following",
-    search?: string
-  ) {
-    // Don't fetch if not authenticated
-    if (status !== "authenticated") {
-      setLoading(false);
-      return;
+  // 2. Construct the dynamic endpoint
+  // The hook will automatically re-fetch whenever this string changes
+  const endpoint = `/api/user/connections?type=${activeTab}${
+    currentQuery ? `&q=${encodeURIComponent(currentQuery)}` : ""
+  }`;
+
+  // 3. Use the hook
+  const { 
+    items: users, 
+    loading, 
+    error 
+  } = useResurceManager<UserType>(endpoint);
+
+  // 4. Handle Search Trigger
+  const handleSearch = () => {
+    if (inputValue.trim() !== currentQuery) {
+      setCurrentQuery(inputValue.trim());
     }
+  };
 
-    try {
-      setLoading(true);
-      let endpoint = `/api/user/connections?type=${tab}`;
-      if (search) {
-        endpoint += `&q=${encodeURIComponent(search)}`;
-      }
-      const res = await fetch(endpoint);
-      const data =( await res.json())as ApiResponse<UserType[]>;
-
-      if (!res.ok) throw new Error(data.error || "Failed to fetch connections");
-
-      if(data.data)setUsers(data.data );
-      setError(null);
-    } catch (err: any) {
-      setError(err.message);
-      setUsers([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // Fetch data when tab changes or on initial load
-  useEffect(() => {
-    fetchConnections(activeTab, query || undefined);
-  }, [activeTab, status, query]); // <-- Added query to dependency array
+  const handleTabChange = (tab: "followers" | "following") => {
+    setActiveTab(tab);
+    setInputValue("");
+    setCurrentQuery(""); // Clear search when switching tabs
+  };
 
   // Developer card (re-usable)
   const DeveloperCard = ({ dev }: { dev: UserType }) => (
@@ -129,11 +118,9 @@ export default function ConnectionsPage() {
           <div className="relative w-full mb-8">
             <input
               type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) =>
-                e.key === "Enter" && fetchConnections(activeTab, query)
-              }
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder={`Search ${activeTab}...`}
               className="w-full p-4 pl-12 bg-neutral-900/50 border border-neutral-800 rounded-lg text-[#E9E6D7] placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#E9E6D7]"
             />
@@ -149,10 +136,7 @@ export default function ConnectionsPage() {
                     ? "text-[#E9E6D7] font-semibold border-b-2 border-white"
                     : "text-neutral-500"
                 }`}
-                onClick={() => {
-                  setActiveTab("followers");
-                  setQuery(""); // Clear search when changing tabs
-                }}
+                onClick={() => handleTabChange("followers")}
               >
                 <User className="w-4 h-4" />
                 Followers
@@ -163,10 +147,7 @@ export default function ConnectionsPage() {
                     ? "text-[#E9E6D7] font-semibold border-b-2 border-white"
                     : "text-neutral-500"
                 }`}
-                onClick={() => {
-                  setActiveTab("following");
-                  setQuery(""); // Clear search when changing tabs
-                }}
+                onClick={() => handleTabChange("following")}
               >
                 <Users className="w-4 h-4" />
                 Following
@@ -188,7 +169,7 @@ export default function ConnectionsPage() {
               ))
             ) : (
               <p className="text-neutral-500 col-span-full text-center">
-                No {activeTab} found{query && ' matching your search'}.
+                No {activeTab} found{currentQuery && ' matching your search'}.
               </p>
             )}
           </div>

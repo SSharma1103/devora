@@ -1,19 +1,17 @@
-// app/[username]/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Sidebar from "@/components/sidebar";
 import PublicProfileHeader from "@/components/PublicProfileHeader";
 import WorkExperience from "@/components/WorkExperience";
 import Projects from "@/components/Projects";
-import GitHub from "@/components/GitHub";
 import LeetCodeStatsCard from "@/components/Leetcode";
 import RightSidebar from "@/components/RightSidebar";
 import GithubPublic from "@/components/PublicGitData";
 import { Loader2 } from "lucide-react";
-import {UserProfile,User, ApiResponse} from "@/types"
-
+import { UserProfile } from "@/types";
+// 1. Import the hook
+import { useResurceManager } from "@/hooks/useResourceManager";
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -23,36 +21,20 @@ export default function UserProfilePage() {
   const username =
     (Array.isArray(rawUsername) ? rawUsername[0] : rawUsername) ?? "";
 
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // 2. Use the hook to fetch user data
+  // Note: The API returns a single object for this endpoint, but the hook is typed for arrays.
+  // We use the hook for its loading/error logic and cast the result below.
+  const {
+    items: userRaw,
+    loading,
+    error,
+  } = useResurceManager<UserProfile>(
+    username ? `/api/user?username=${encodeURIComponent(username)}` : ""
+  );
 
-  useEffect(() => {
-    if (!username) return;
-
-    const fetchUserData = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(
-          `/api/user?username=${encodeURIComponent(username)}`
-        );
-        const data = (await res.json())as ApiResponse<UserProfile>;
-
-        if (!res.ok) {
-          throw new Error(data.error || "User not found");
-        }
-
-        if(data.data)setUser(data.data);
-        setError(null);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, [username]);
+  // 3. Cast the result: The runtime value will be the User object, not an array.
+  // We treat the "items" state as the single user profile.
+  const user = userRaw as unknown as UserProfile | null;
 
   return (
     <div className="flex bg-black text-[#E9E6D7] min-h-screen">
@@ -71,7 +53,8 @@ export default function UserProfilePage() {
           </div>
         )}
 
-        {user && !loading && !error && (
+        {/* 4. Check if we have valid user data (and ensure it's not the initial empty array from the hook) */}
+        {user && !Array.isArray(user) && !loading && !error && (
           <div className="w-full">
             <PublicProfileHeader
               user={user}

@@ -12,22 +12,25 @@ import {
   CheckCircle2,
   Cpu,
 } from "lucide-react";
-// Import the shared generic type
-import { ApiResponse } from "@/types";
-
-// Define the specific data expected from this API call
-interface SetUsernameResponse {
-  username: string;
-}
+// 1. Import the hook
+import { useResurceManager } from "@/hooks/useResourceManager";
 
 export default function SetupUsername() {
   // --- Real hooks ---
   const { data: session, status, update } = useSession();
   const router = useRouter();
 
+  // 2. Initialize resource manager
+  // We use <any> to bypass the 'Identifiable' constraint since the response doesn't have an ID
+  // We pass [] as initialData to prevent the hook from trying to GET data on mount
+  const { 
+    additem, 
+    processing, 
+    error, 
+    seterror: setError 
+  } = useResurceManager<any>("/api/user/username", []);
+
   const [username, setUsername] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   
   // Stable Sys.Id per mount, not per render
   const [sysId] = useState(() =>
@@ -36,12 +39,10 @@ export default function SetupUsername() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
+    setError(null);
 
     if (!username.trim()) {
       setError("Username is required");
-      setLoading(false);
       return;
     }
 
@@ -49,43 +50,24 @@ export default function SetupUsername() {
 
     if (!normalizedUsername) {
       setError("Username cannot be empty");
-      setLoading(false);
       return;
     }
 
     if (!/^[a-zA-Z0-9_]{3,20}$/.test(normalizedUsername)) {
       setError("Use 3-20 characters: letters, numbers, or underscores.");
-      setLoading(false);
       return;
     }
 
-    try {
-      const response = await fetch("/api/user/username", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username: normalizedUsername }),
-      });
+    // 3. Use additem from the hook to POST the data
+    const success = await additem({ username: normalizedUsername });
 
-      // === TYPE SAFETY APPLIED HERE ===
-      const data = (await response.json()) as ApiResponse<SetUsernameResponse>;
-
-      if (!response.ok || !data.success) {
-        setError(data.error || "Failed to set username");
-        setLoading(false);
-        return;
-      }
-
+    if (success) {
       // Refresh session with new username
       await update();
-
       // Redirect to home page
       router.push("/");
-    } catch (err) {
-      setError("Connection refused. Please retry.");
-      setLoading(false);
     }
+    // Note: If success is false, the hook automatically sets the 'error' state
   };
 
   const inputClasses =
@@ -190,7 +172,7 @@ export default function SetupUsername() {
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="enter_username"
                   className={inputClasses}
-                  disabled={loading}
+                  disabled={processing}
                   autoComplete="off"
                   autoFocus
                 />
@@ -235,10 +217,10 @@ export default function SetupUsername() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={processing}
               className="w-full group relative overflow-hidden bg-[#E9E6D7] hover:bg-white text-black h-12 flex items-center justify-center gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? (
+              {processing ? (
                 <>
                   <Loader2 className="animate-spin" size={16} />
                   <span className="text-xs font-bold uppercase tracking-widest">

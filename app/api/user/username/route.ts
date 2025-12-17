@@ -2,14 +2,15 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { ApiResponse } from "@/types";
 
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
 
     if (!session?.userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
@@ -17,8 +18,8 @@ export async function POST(request: Request) {
     const { username: rawUsername } = await request.json();
 
     if (!rawUsername || typeof rawUsername !== "string") {
-      return NextResponse.json(
-        { error: "Username is required" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Username is required" },
         { status: 400 }
       );
     }
@@ -27,8 +28,8 @@ export async function POST(request: Request) {
     const username = rawUsername.trim().toLowerCase();
 
     if (!username) {
-      return NextResponse.json(
-        { error: "Username cannot be empty" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Username cannot be empty" },
         { status: 400 }
       );
     }
@@ -39,8 +40,8 @@ export async function POST(request: Request) {
     });
 
     if (user?.username) {
-      return NextResponse.json(
-        { error: "Username has already been set" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Username has already been set" },
         { status: 400 }
       );
     }
@@ -52,8 +53,8 @@ export async function POST(request: Request) {
     });
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: "Username is already taken" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Username is already taken" },
         { status: 409 }
       );
     }
@@ -64,13 +65,15 @@ export async function POST(request: Request) {
       data: { username },
     });
 
-    return NextResponse.json({ success: true, username });
+    return NextResponse.json<ApiResponse<{ username: string }>>({
+      success: true,
+      data: { username },
+    });
   } catch (error) {
     console.error("Error setting username:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
+    return NextResponse.json<ApiResponse<null>>(
+      { success: false, error: "Internal server error" },
       { status: 500 }
     );
   }
 }
-

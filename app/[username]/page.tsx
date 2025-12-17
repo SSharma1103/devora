@@ -12,24 +12,8 @@ import LeetCodeStatsCard from "@/components/Leetcode";
 import RightSidebar from "@/components/RightSidebar";
 import GithubPublic from "@/components/PublicGitData";
 import { Loader2 } from "lucide-react";
+import {UserProfile,User, ApiResponse} from "@/types"
 
-interface UserProfile {
-  id: number;
-  name: string | null;
-  username: string;
-  pfp: string | null;
-  banner: string | null;
-  gitdata: any;
-  pdata: any;
-  projects: any[];
-  workExp: any[];
-  _count: {
-    followers: number;
-    following: number;
-  };
-  isFollowedByCurrentUser: boolean;
-  isCurrentUser: boolean;
-}
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -52,13 +36,13 @@ export default function UserProfilePage() {
         const res = await fetch(
           `/api/user?username=${encodeURIComponent(username)}`
         );
-        const data = await res.json();
+        const data = (await res.json())as ApiResponse<UserProfile>;
 
         if (!res.ok) {
           throw new Error(data.error || "User not found");
         }
 
-        setUser(data.data);
+        if(data.data)setUser(data.data);
         setError(null);
       } catch (err: any) {
         setError(err.message);

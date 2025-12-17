@@ -9,25 +9,23 @@ import {
   Twitter, 
   Globe, 
   Code2, 
-  User, 
+  User as UserIcon, 
   Cpu, 
   Loader2 
 } from "lucide-react";
+// 1. Import your shared types
+import { PdataForm, ApiResponse, User } from "@/types";
 
 interface UpdateProfileFormProps {
   onClose: () => void;
 }
 
-interface PdataForm {
-  about: string;
-  devstats: string;
-  stack: string;
-  socials: {
-    github: string;
-    linkedin: string;
-    twitter: string;
-    portfolio: string;
-  };
+interface CloudinaryResponse {
+  secure_url: string;
+}
+
+interface CloudinaryError {
+  error: { message: string };
 }
 
 export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
@@ -60,23 +58,28 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
   useEffect(() => {
     async function fetchData() {
       try {
+        // --- Fetch Pdata ---
         const res = await fetch("/api/pdata");
         if (res.ok) {
-          const data = await res.json();
-          if (data?.data) {
+          // 3. Type the Pdata response
+          const json = (await res.json()) as ApiResponse<PdataForm>;
+          if (json.success && json.data) {
             setFormData({
-              about: data.data.about || "",
-              devstats: data.data.devstats || "",
-              stack: data.data.stack || "",
-              socials: data.data.socials || { github: "", linkedin: "", twitter: "", portfolio: "" },
+              about: json.data.about || "",
+              devstats: json.data.devstats || "",
+              stack: json.data.stack || "",
+              socials: json.data.socials || { github: "", linkedin: "", twitter: "", portfolio: "" },
             });
           }
         }
+
+        // --- Fetch User Profile ---
         const userRes = await fetch("/api/user/profile");
         if (userRes.ok) {
-          const userData = await userRes.json();
-          if (userData?.data?.leetcode) {
-            setLeetcodeUsername(userData.data.leetcode);
+          // 4. Type the User response (using Pick for safety)
+          const json = (await userRes.json()) as ApiResponse<Pick<User, "leetcode">>;
+          if (json.success && json.data?.leetcode) {
+            setLeetcodeUsername(json.data.leetcode);
           }
         }
       } catch (err: any) {
@@ -90,6 +93,7 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) {
     const { name, value } = e.target;
+    // TypeScript knows 'name' matches keys of PdataForm
     setFormData((prev) => ({ ...prev, [name]: value }));
   }
 
@@ -97,7 +101,8 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      socials: { ...prev.socials, [name]: value },
+      // We cast 'name' because input names are strings, but we know they match keys of socials
+      socials: { ...prev.socials, [name as keyof PdataForm["socials"]]: value },
     }));
   }
 
@@ -109,11 +114,16 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
         upload_preset: "devora_uploads",
       };
 
+      // 5. Type the Signature Response
       const sigRes = await fetch("/api/upload-signature", {
         method: "POST",
         body: JSON.stringify({ paramsToSign }),
       });
-      const { signature } = await sigRes.json();
+      
+      const sigJson = (await sigRes.json()) as ApiResponse<{ signature: string }>;
+      if (!sigJson.success || !sigJson.data) throw new Error(sigJson.error);
+      
+      const { signature } = sigJson.data;
 
       const formData = new FormData();
       formData.append("file", file);
@@ -131,12 +141,15 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
       });
 
       if (!uploadRes.ok) {
-        const errorData = await uploadRes.json();
+        // 6. Type the Cloudinary Error
+        const errorData = (await uploadRes.json()) as CloudinaryError;
         throw new Error(`Cloudinary upload failed: ${errorData.error.message}`);
       }
 
-      const uploadData = await uploadRes.json();
+      // 7. Type the Cloudinary Success
+      const uploadData = (await uploadRes.json()) as CloudinaryResponse;
       return uploadData.secure_url;
+
     } catch (err: any) {
       console.error("File upload error:", err);
       setError(err.message || "Failed to upload image");
@@ -150,8 +163,8 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
     setUploading(false);
     setError(null);
 
-    let newPfpUrl = null;
-    let newBannerUrl = null;
+    let newPfpUrl: string | null = null;
+    let newBannerUrl: string | null = null;
 
     try {
       setUploading(true);
@@ -169,14 +182,20 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
         throw new Error(error || "Image upload failed. Please try again.");
       }
 
+      // --- Update PData ---
       const pdataRes = await fetch("/api/pdata", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-      const pdataData = await pdataRes.json();
-      if (!pdataRes.ok) throw new Error(pdataData.error || "Failed to update personal data");
 
+      // 8. Type the Patch Response
+      const pdataJson = (await pdataRes.json()) as ApiResponse<PdataForm>;
+      if (!pdataRes.ok || !pdataJson.success) {
+         throw new Error(pdataJson.error || "Failed to update personal data");
+      }
+
+      // --- Update User Profile (Images/LeetCode) ---
       const profileUpdateData: { pfp?: string; banner?: string; leetcode?: string } = {};
       if (newPfpUrl) profileUpdateData.pfp = newPfpUrl;
       if (newBannerUrl) profileUpdateData.banner = newBannerUrl;
@@ -190,8 +209,12 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(profileUpdateData),
         });
-        const userData = await userRes.json();
-        if (!userRes.ok) throw new Error(userData.error || "Failed to update user profile");
+        
+        // 9. Type the User Patch Response
+        const userJson = (await userRes.json()) as ApiResponse<User>;
+        if (!userRes.ok || !userJson.success) {
+           throw new Error(userJson.error || "Failed to update user profile");
+        }
       }
 
       setSuccess(true);
@@ -210,7 +233,6 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
 
   // --- Styles ---
   const offWhite = "#E9E6D7";
-  // Reduced padding (p-2.5) and smaller text for compact feel
   const inputBaseClasses = "w-full p-2.5 pl-9 bg-[#0a0a0a] border border-[#E9E6D7]/20 rounded-none focus:outline-none focus:border-[#E9E6D7] focus:ring-1 focus:ring-[#E9E6D7] transition-all text-[#E9E6D7] placeholder-[#E9E6D7]/30 text-sm";
   const textareaClasses = "w-full p-2.5 bg-[#0a0a0a] border border-[#E9E6D7]/20 rounded-none focus:outline-none focus:border-[#E9E6D7] focus:ring-1 focus:ring-[#E9E6D7] transition-all text-[#E9E6D7] placeholder-[#E9E6D7]/30 text-sm resize-none";
   const labelClasses = "block text-[10px] font-bold text-[#E9E6D7]/60 mb-1.5 uppercase tracking-wider";
@@ -262,7 +284,7 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
                       onChange={(e) => setPfpFile(e.target.files ? e.target.files[0] : null)}
                     />
                     <div className="p-1.5 bg-[#E9E6D7]/5 rounded-full group-hover:bg-[#E9E6D7] group-hover:text-black transition-colors text-[#E9E6D7]">
-                      <User size={16} />
+                      <UserIcon size={16} />
                     </div>
                     <span className="text-[10px] text-[#E9E6D7]/60 group-hover:text-[#E9E6D7] truncate max-w-20">
                       {pfpFile ? "Selected" : "Avatar"}
@@ -425,8 +447,8 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
               <div className="space-y-2 pt-4 border-t border-[#E9E6D7]/10">
                 {error && (
                   <div className="bg-red-900/10 border border-red-900/30 text-red-400 p-2 text-xs flex items-center gap-2">
-                     <span className="w-1 h-1 bg-red-500 rounded-full animate-pulse"/>
-                     {error}
+                      <span className="w-1 h-1 bg-red-500 rounded-full animate-pulse"/>
+                      {error}
                   </div>
                 )}
                 {success && (

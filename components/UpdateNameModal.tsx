@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Loader2, X, User, Terminal, Check } from "lucide-react";
+// 1. Import your standard API wrapper type
+import { ApiResponse } from "@/types"; 
 
 interface UpdateNameModalProps {
   currentName: string;
@@ -32,12 +34,17 @@ export default function UpdateNameModal({ currentName, onClose }: UpdateNameModa
       const res = await fetch("/api/user/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        // We are sending { name: string }, which matches the backend expectation
         body: JSON.stringify({ name: name.trim() }),
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to update name");
+      // 2. Type the response using ApiResponse
+      // We expect the backend to return the updated user object or just success
+      const json = (await res.json()) as ApiResponse<{ name: string }>;
+
+      // 3. Check for logic errors (success: false)
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "Failed to update name");
       }
 
       onClose(true);
@@ -52,10 +59,9 @@ export default function UpdateNameModal({ currentName, onClose }: UpdateNameModa
   // --- Theme Constants ---
   const offWhite = "#E9E6D7";
   const inputClasses = "w-full p-3 bg-[#0a0a0a] border border-[#E9E6D7]/20 rounded-none focus:outline-none focus:border-[#E9E6D7] focus:ring-1 focus:ring-[#E9E6D7] transition-all text-[#E9E6D7] placeholder-[#E9E6D7]/30 text-sm";
-  const labelClasses = "block text-[10px] font-bold text-[#E9E6D7]/50 uppercase tracking-widest mb-1.5";
-
+  
   return (
-    <div className="fixed inset-0 backdrop-blur-xl bg-black/80 flex items-center justify-center z-60 p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 backdrop-blur-xl bg-black/80 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
       <form
         onSubmit={handleSubmit}
         className="bg-[#050505] w-full max-w-md border border-[#E9E6D7]/20 shadow-2xl relative flex flex-col"

@@ -2,14 +2,15 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { ApiResponse , Project } from "@/types";
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
     if (!session?.userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success:false ,error: "Unauthorized" },
         { status: 401 }
       );
     }
@@ -19,11 +20,11 @@ export async function GET() {
       orderBy: { id: "desc" },
     });
 
-    return NextResponse.json({ success: true, data: projects });
+    return NextResponse.json<ApiResponse<Project[]>>({ success: true, data: projects });
   } catch {
     console.error("Error fetching projects:");
-    return NextResponse.json(
-      { error: "Failed to fetch projects"},
+    return NextResponse.json<ApiResponse<null>>(
+      { success:false ,error: "Failed to fetch projects"},
       { status: 500 }
     );
   }
@@ -34,8 +35,8 @@ export async function POST(request: Request) {
     const session = await getServerSession(authOptions);
 
     if (!session?.userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success:false,error: "Unauthorized" },
         { status: 401 }
       );
     }
@@ -44,8 +45,8 @@ export async function POST(request: Request) {
     const { title, link, description, gitlink } = body;
 
     if (!title) {
-      return NextResponse.json(
-        { error: "Title is required" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success:false ,error: "Title is required" },
         { status: 400 }
       );
     }
@@ -60,11 +61,11 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json({ success: true, data: project }, { status: 201 });
+    return NextResponse.json<ApiResponse<Project>>({ success: true, data: project }, { status: 201 });
   } catch {
     console.error("Error creating project:");
-    return NextResponse.json(
-      { error: "Failed to create project" },
+    return NextResponse.json<ApiResponse<null>>(
+      { success:false,error: "Failed to create project" },
       { status: 500 }
     );
   }

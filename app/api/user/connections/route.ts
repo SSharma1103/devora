@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { ApiResponse,User,BasicUser } from "@/types";
 
 /**
  * GET /api/user/connections
@@ -15,9 +16,10 @@ export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     const currentUserId = session?.userId ? parseInt(session.userId) : null;
+    
 
     if (!currentUserId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json<ApiResponse<null>>({ success:false,error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);
@@ -39,7 +41,8 @@ export async function GET(req: Request) {
       pfp: true,
     };
 
-    let users;
+    
+    let users: BasicUser[];
 
     if (type === "followers") {
       // Find all 'Follow' records where the user is being followed
@@ -76,17 +79,17 @@ export async function GET(req: Request) {
       });
       users = follows.map((f) => f.following);
     } else {
-      return NextResponse.json(
-        { error: "Invalid type. Must be 'followers' or 'following'." },
+      return NextResponse.json<ApiResponse<null>>(
+        { success:false,error: "Invalid type. Must be 'followers' or 'following'." },
         { status: 400 }
       );
     }
 
-    return NextResponse.json({ success: true, data: users });
+    return NextResponse.json<ApiResponse<BasicUser[]>>({ success: true, data: users });
   } catch (err: any) {
     console.error("Error fetching connections:", err);
-    return NextResponse.json(
-      { error: "Failed to fetch connections", message: err.message },
+    return NextResponse.json<ApiResponse<null>>(
+      { success:false,error: "Failed to fetch connections", message: err.message },
       { status: 500 }
     );
   }

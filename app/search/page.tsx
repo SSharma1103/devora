@@ -5,13 +5,8 @@ import { useState, useEffect } from "react";
 import { Search, User, FolderGit2, Code } from "lucide-react";
 import Sidebar from "@/components/sidebar";
 import Link from "next/link"; // 1. Import the Link component
+import { ApiResponse,UserType } from "@/types";
 
-interface UserType {
-  id: number;
-  name: string | null;
-  username: string;
-  pfp?: string | null;
-}
 
 export default function DiscoverPage() {
   const [activeTab, setActiveTab] = useState<"developers" | "projects">(
@@ -30,11 +25,11 @@ export default function DiscoverPage() {
         ? `/api/user?q=${encodeURIComponent(search)}`
         : `/api/user`;
       const res = await fetch(endpoint);
-      const data = await res.json();
+      const data = (await res.json())as ApiResponse<UserType[]>;
 
       if (!res.ok) throw new Error(data.error || "Failed to fetch users");
 
-      setUsers(data.data || []);
+      if(data.data)setUsers(data.data);
       setError(null);
     } catch (err: any) {
       setError(err.message);

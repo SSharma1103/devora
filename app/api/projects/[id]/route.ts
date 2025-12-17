@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { ApiResponse, Project } from "@/types";
 
 // Helper type for the new async params
 type RouteParams = { params: Promise<{ id: string }> };
@@ -16,8 +17,8 @@ export async function GET(
     const { id } = await params;
 
     if (!session?.userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success:false ,error: "Unauthorized" },
         { status: 401 }
       );
     }
@@ -30,17 +31,17 @@ export async function GET(
     });
 
     if (!project) {
-      return NextResponse.json(
-        { error: "Project not found" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success:false ,error: "Project not found" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ success: true, data: project });
+    return NextResponse.json<ApiResponse<Project>>({ success: true, data: project });
   } catch  {
     console.error("Error fetching project:");
-    return NextResponse.json(
-      { error: "Failed to fetch project" },
+    return NextResponse.json<ApiResponse<null>>(
+      { success:false ,error: "Failed to fetch project" },
       { status: 500 }
     );
   }
@@ -55,8 +56,8 @@ export async function PUT(
     const { id } = await params; // Await here
 
     if (!session?.userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success:false,error: "Unauthorized" },
         { status: 401 }
       );
     }
@@ -73,8 +74,8 @@ export async function PUT(
     });
 
     if (!existingProject) {
-      return NextResponse.json(
-        { error: "Project not found" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success:false,error: "Project not found" },
         { status: 404 }
       );
     }
@@ -89,11 +90,11 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json({ success: true, data: project });
+    return NextResponse.json<ApiResponse<Project>>({ success: true, data: project });
   } catch {
     console.error("Error updating project:");
-    return NextResponse.json(
-      { error: "Failed to update project" },
+    return NextResponse.json<ApiResponse<null>>(
+      { success:false,error: "Failed to update project" },
       { status: 500 }
     );
   }
@@ -108,8 +109,8 @@ export async function DELETE(
     const { id } = await params; // Await here
 
     if (!session?.userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success:false,error: "Unauthorized" },
         { status: 401 }
       );
     }
@@ -123,8 +124,8 @@ export async function DELETE(
     });
 
     if (!existingProject) {
-      return NextResponse.json(
-        { error: "Project not found" },
+      return NextResponse.json<ApiResponse<null>>(
+        { success:false,error: "Project not found" },
         { status: 404 }
       );
     }
@@ -133,11 +134,11 @@ export async function DELETE(
       where: { id: parseInt(id) },
     });
 
-    return NextResponse.json({ success: true, message: "Project deleted" });
+    return NextResponse.json<ApiResponse<null>>({ success: true, message: "Project deleted" });
   } catch {
     console.error("Error deleting project:");
-    return NextResponse.json(
-      { error: "Failed to delete project" },
+    return NextResponse.json<ApiResponse<null>>(
+      { success:false,error: "Failed to delete project" },
       { status: 500 }
     );
   }

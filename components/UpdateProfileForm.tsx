@@ -13,8 +13,8 @@ import {
   Cpu, 
   Loader2 
 } from "lucide-react";
-// 1. Import your shared types
-import { PdataForm, ApiResponse, User } from "@/types";
+import { PdataForm, ApiResponse, User, Pdata } from "@/types";
+import { useResurceManager } from "@/hooks/useResourceManager";
 
 interface UpdateProfileFormProps {
   onClose: () => void;
@@ -29,11 +29,20 @@ interface CloudinaryError {
 }
 
 export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // State for Pdata fields
+  const { 
+    items: pdataItems, 
+    loading: fetchingPdata 
+  } = useResurceManager<Pdata>("/api/pdata");
+
+  const { 
+    items: userItems, 
+    loading: fetchingUser 
+  } = useResurceManager<User>("/api/user/profile");
+
   const [formData, setFormData] = useState<PdataForm>({
     about: "",
     devstats: "",
@@ -41,59 +50,44 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
     socials: { github: "", linkedin: "", twitter: "", portfolio: "" },
   });
 
-  // State for User Schema fields
   const [leetcodeUsername, setLeetcodeUsername] = useState("");
 
-  // File Upload State
   const [pfpFile, setPfpFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [pfpUrl, setPfpUrl] = useState<string | null>(null);
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  // Refs for custom file triggers
   const pfpInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        // --- Fetch Pdata ---
-        const res = await fetch("/api/pdata");
-        if (res.ok) {
-          // 3. Type the Pdata response
-          const json = (await res.json()) as ApiResponse<PdataForm>;
-          if (json.success && json.data) {
-            setFormData({
-              about: json.data.about || "",
-              devstats: json.data.devstats || "",
-              stack: json.data.stack || "",
-              socials: json.data.socials || { github: "", linkedin: "", twitter: "", portfolio: "" },
-            });
-          }
-        }
+    if (pdataItems && pdataItems.length > 0) {
+      const data = pdataItems[0];
+      setFormData({
+        about: data.about || "",
+        devstats: data.devstats || "",
+        stack: data.stack || "",
+        socials: (data.socials as unknown as PdataForm["socials"]) || { 
+          github: "", linkedin: "", twitter: "", portfolio: "" 
+        },
+      });
+    }
+  }, [pdataItems]);
 
-        // --- Fetch User Profile ---
-        const userRes = await fetch("/api/user/profile");
-        if (userRes.ok) {
-          // 4. Type the User response (using Pick for safety)
-          const json = (await userRes.json()) as ApiResponse<Pick<User, "leetcode">>;
-          if (json.success && json.data?.leetcode) {
-            setLeetcodeUsername(json.data.leetcode);
-          }
-        }
-      } catch (err: any) {
-        setError(err.message || "Failed to load data");
+  useEffect(() => {
+    if (userItems && userItems.length > 0) {
+      const user = userItems[0];
+      if (user.leetcode) {
+        setLeetcodeUsername(user.leetcode);
       }
     }
-    fetchData();
-  }, []);
+  }, [userItems]);
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) {
     const { name, value } = e.target;
-    // TypeScript knows 'name' matches keys of PdataForm
     setFormData((prev) => ({ ...prev, [name]: value }));
   }
 
@@ -101,7 +95,6 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      // We cast 'name' because input names are strings, but we know they match keys of socials
       socials: { ...prev.socials, [name as keyof PdataForm["socials"]]: value },
     }));
   }
@@ -114,7 +107,6 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
         upload_preset: "devora_uploads",
       };
 
-      // 5. Type the Signature Response
       const sigRes = await fetch("/api/upload-signature", {
         method: "POST",
         body: JSON.stringify({ paramsToSign }),
@@ -141,12 +133,10 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
       });
 
       if (!uploadRes.ok) {
-        // 6. Type the Cloudinary Error
         const errorData = (await uploadRes.json()) as CloudinaryError;
         throw new Error(`Cloudinary upload failed: ${errorData.error.message}`);
       }
 
-      // 7. Type the Cloudinary Success
       const uploadData = (await uploadRes.json()) as CloudinaryResponse;
       return uploadData.secure_url;
 
@@ -159,7 +149,7 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
     setUploading(false);
     setError(null);
 
@@ -182,20 +172,17 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
         throw new Error(error || "Image upload failed. Please try again.");
       }
 
-      // --- Update PData ---
       const pdataRes = await fetch("/api/pdata", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      // 8. Type the Patch Response
       const pdataJson = (await pdataRes.json()) as ApiResponse<PdataForm>;
       if (!pdataRes.ok || !pdataJson.success) {
          throw new Error(pdataJson.error || "Failed to update personal data");
       }
 
-      // --- Update User Profile (Images/LeetCode) ---
       const profileUpdateData: { pfp?: string; banner?: string; leetcode?: string } = {};
       if (newPfpUrl) profileUpdateData.pfp = newPfpUrl;
       if (newBannerUrl) profileUpdateData.banner = newBannerUrl;
@@ -210,7 +197,6 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
           body: JSON.stringify(profileUpdateData),
         });
         
-        // 9. Type the User Patch Response
         const userJson = (await userRes.json()) as ApiResponse<User>;
         if (!userRes.ok || !userJson.success) {
            throw new Error(userJson.error || "Failed to update user profile");
@@ -226,12 +212,11 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
     } catch (err: any) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
       setUploading(false);
     }
   }
 
-  // --- Styles ---
   const offWhite = "#E9E6D7";
   const inputBaseClasses = "w-full p-2.5 pl-9 bg-[#0a0a0a] border border-[#E9E6D7]/20 rounded-none focus:outline-none focus:border-[#E9E6D7] focus:ring-1 focus:ring-[#E9E6D7] transition-all text-[#E9E6D7] placeholder-[#E9E6D7]/30 text-sm";
   const textareaClasses = "w-full p-2.5 bg-[#0a0a0a] border border-[#E9E6D7]/20 rounded-none focus:outline-none focus:border-[#E9E6D7] focus:ring-1 focus:ring-[#E9E6D7] transition-all text-[#E9E6D7] placeholder-[#E9E6D7]/30 text-sm resize-none";
@@ -244,7 +229,6 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
         style={{ boxShadow: '0 0 40px -10px rgba(233, 230, 215, 0.1)' }}
       >
         
-        {/* Compact Header */}
         <div className="sticky top-0 z-10 bg-[#050505]/95 backdrop-blur-md border-b border-[#E9E6D7]/10 px-5 py-3 flex items-center justify-between">
           <div className="flex items-baseline gap-3">
             <h2 className="text-lg font-bold tracking-tight" style={{ color: offWhite }}>
@@ -260,18 +244,14 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
           </button>
         </div>
 
-        {/* Compact Body - Reduced padding and gaps */}
         <form onSubmit={handleSubmit} className="flex-1 p-5">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             
-            {/* COLUMN 1: Visual Assets & Stack */}
             <div className="space-y-5">
               
-              {/* Image Uploaders - Now Side by Side */}
               <div>
                 <h3 className={labelClasses}>Visual Assets</h3>
                 <div className="flex gap-3">
-                  {/* PFP Upload */}
                   <div 
                     onClick={() => pfpInputRef.current?.click()}
                     className="group relative flex-1 h-24 border border-dashed border-[#E9E6D7]/30 hover:border-[#E9E6D7] transition-all cursor-pointer bg-[#0a0a0a] flex flex-col items-center justify-center gap-1.5"
@@ -291,7 +271,6 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
                     </span>
                   </div>
 
-                  {/* Banner Upload */}
                   <div 
                     onClick={() => bannerInputRef.current?.click()}
                     className="group relative flex-2 h-24 border border-dashed border-[#E9E6D7]/30 hover:border-[#E9E6D7] transition-all cursor-pointer bg-[#0a0a0a] flex flex-col items-center justify-center gap-1.5"
@@ -311,7 +290,6 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
                 </div>
               </div>
 
-              {/* Stack */}
               <div>
                 <h3 className={labelClasses}>Tech Stack</h3>
                 <div className="relative">
@@ -329,12 +307,10 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
               </div>
             </div>
 
-            {/* COLUMN 2: Details */}
             <div className="space-y-5">
               <div>
                 <h3 className={labelClasses}>About You</h3>
                 <div className="relative">
-                  {/* Reduced height from h-64 to h-32/h-40 */}
                   <textarea
                     name="about"
                     value={formData.about}
@@ -359,13 +335,11 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
               </div>
             </div>
 
-            {/* COLUMN 3: Presence */}
             <div className="space-y-5 flex flex-col h-full">
               <div>
                 <h3 className={labelClasses}>Social Presence</h3>
                 <div className="space-y-2.5">
                   
-                  {/* LeetCode */}
                   <div className="relative group">
                     <div className="absolute top-2.5 left-2.5 text-[#E9E6D7]/40 group-focus-within:text-[#E9E6D7] transition-colors">
                       <Code2 size={14} />
@@ -379,7 +353,6 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
                     />
                   </div>
 
-                  {/* GitHub */}
                   <div className="relative group">
                     <div className="absolute top-2.5 left-2.5 text-[#E9E6D7]/40 group-focus-within:text-[#E9E6D7] transition-colors">
                       <Github size={14} />
@@ -394,7 +367,6 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
                     />
                   </div>
 
-                  {/* LinkedIn */}
                   <div className="relative group">
                     <div className="absolute top-2.5 left-2.5 text-[#E9E6D7]/40 group-focus-within:text-[#E9E6D7] transition-colors">
                       <Linkedin size={14} />
@@ -409,7 +381,6 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
                     />
                   </div>
 
-                  {/* Twitter */}
                   <div className="relative group">
                     <div className="absolute top-2.5 left-2.5 text-[#E9E6D7]/40 group-focus-within:text-[#E9E6D7] transition-colors">
                       <Twitter size={14} />
@@ -424,7 +395,6 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
                     />
                   </div>
 
-                  {/* Portfolio */}
                   <div className="relative group">
                     <div className="absolute top-2.5 left-2.5 text-[#E9E6D7]/40 group-focus-within:text-[#E9E6D7] transition-colors">
                       <Globe size={14} />
@@ -443,7 +413,6 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
 
               <div className="flex-1"></div>
 
-              {/* Messages & Actions */}
               <div className="space-y-2 pt-4 border-t border-[#E9E6D7]/10">
                 {error && (
                   <div className="bg-red-900/10 border border-red-900/30 text-red-400 p-2 text-xs flex items-center gap-2">
@@ -460,11 +429,11 @@ export default function UpdateProfileForm({ onClose }: UpdateProfileFormProps) {
                 
                 <button
                   type="submit"
-                  disabled={loading || uploading}
+                  disabled={submitting || uploading}
                   className="w-full h-10 flex items-center justify-center gap-2 text-black font-bold text-xs tracking-wider uppercase disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.01] active:scale-[0.99]"
                   style={{ backgroundColor: offWhite }}
                 >
-                  {(loading || uploading) ? (
+                  {(submitting || uploading) ? (
                     <>
                       <Loader2 className="animate-spin" size={14} />
                       {uploading ? "Uploading..." : "Saving..."}

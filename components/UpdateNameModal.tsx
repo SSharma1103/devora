@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2, X, User, Terminal, Check } from "lucide-react";
-// 1. Import your standard API wrapper type
-import { ApiResponse } from "@/types"; 
+import { useState, useEffect } from "react";
+import { Loader2, X, User as UserIcon, Terminal, Check } from "lucide-react";
+import { ApiResponse, User } from "@/types"; 
+import { useResurceManager } from "@/hooks/useResourceManager";
 
 interface UpdateNameModalProps {
   currentName: string;
@@ -11,9 +11,25 @@ interface UpdateNameModalProps {
 }
 
 export default function UpdateNameModal({ currentName, onClose }: UpdateNameModalProps) {
+  // 2. Use the hook to fetch the latest User data.
+  // We pass 'undefined' for initialData because we don't have a full User object yet.
+  const { 
+    items: users, 
+    loading: fetching 
+  } = useResurceManager<User>("/api/user/profile");
+  
+  // 3. Restore local state for the input field
   const [name, setName] = useState(currentName);
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 4. Optional: Sync local name if the hook fetches a fresher version from the server
+  useEffect(() => {
+    const fetchedUser = users[0];
+    if (fetchedUser && fetchedUser.name && fetchedUser.name !== currentName) {
+      setName(fetchedUser.name);
+    }
+  }, [users, currentName]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,21 +44,17 @@ export default function UpdateNameModal({ currentName, onClose }: UpdateNameModa
       return;
     }
 
-    setLoading(true);
+    setSubmitting(true);
 
     try {
       const res = await fetch("/api/user/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        // We are sending { name: string }, which matches the backend expectation
         body: JSON.stringify({ name: name.trim() }),
       });
 
-      // 2. Type the response using ApiResponse
-      // We expect the backend to return the updated user object or just success
-      const json = (await res.json()) as ApiResponse<{ name: string }>;
+      const json = (await res.json()) as ApiResponse<User>;
 
-      // 3. Check for logic errors (success: false)
       if (!res.ok || !json.success) {
         throw new Error(json.error || "Failed to update name");
       }
@@ -52,7 +64,7 @@ export default function UpdateNameModal({ currentName, onClose }: UpdateNameModa
     } catch (err: any) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -94,7 +106,7 @@ export default function UpdateNameModal({ currentName, onClose }: UpdateNameModa
 
             <div className="relative group">
                <div className="absolute top-3 left-3 text-[#E9E6D7]/40 group-focus-within:text-[#E9E6D7] transition-colors">
-                  <User size={16} />
+                  <UserIcon size={16} />
                </div>
               <input
                 id="name"
@@ -103,7 +115,7 @@ export default function UpdateNameModal({ currentName, onClose }: UpdateNameModa
                 onChange={(e) => setName(e.target.value)}
                 className={`${inputClasses} pl-10`}
                 placeholder="Enter new display name"
-                disabled={loading}
+                disabled={submitting} // Don't disable while fetching initial data, only while saving
                 autoFocus
               />
             </div>
@@ -119,11 +131,11 @@ export default function UpdateNameModal({ currentName, onClose }: UpdateNameModa
           <div className="pt-2">
             <button
               type="submit"
-              disabled={loading}
+              disabled={submitting}
               className="w-full h-10 flex items-center justify-center gap-2 text-black font-bold text-xs tracking-wider uppercase disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.01] active:scale-[0.99]"
               style={{ backgroundColor: offWhite }}
             >
-              {loading ? (
+              {submitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Processing...</span>

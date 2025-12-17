@@ -9,30 +9,8 @@ import LeetCodeStatsCard from "./Leetcode";
 import RightSidebar from "./RightSidebar";
 import { useSession } from "next-auth/react";
 import { Pdata,ApiResponse } from "@/types";
+import { useResurceManager } from "@/hooks/useResourceManager";
 
-// 2. Define a type for pdata (can be expanded if needed)
-
-// 3. Add a helper function to extract username from URL or direct username
-function extractLeetCodeUsername(input: string | null | undefined): string | null {
-  if (!input) {
-    return null;
-  }
-  try {
-    // Check if it's a full URL
-    if (input.includes("leetcode.com")) {
-      const url = new URL(input);
-      // Get the pathname (e.g., "/username/") and split it
-      const pathParts = url.pathname.split('/').filter(part => part.length > 0);
-      // The username is usually the first part of the path
-      return pathParts[0] || null;
-    }
-    // Otherwise, assume it's just the username
-    return input.trim();
-  } catch (e) {
-    // If URL parsing fails (e.g., just "username"), return it
-    return input.trim();
-  }
-}
 
 export default function DashboardContent() {
   const [activeTab, setActiveTab] = useState<
@@ -40,28 +18,13 @@ export default function DashboardContent() {
   >("work");
   const {data:session}= useSession()
   const leetuser = session?.user?.leetcode
+  const {
+    items:pdataList,
+    loading:loadingPdata,
+  }=useResurceManager<Pdata>("/api/pdata",)
 
-  // 4. Add state to hold pdata
-  const [pdata, setPdata] = useState<Pdata | null>(null);
-  const [loadingPdata, setLoadingPdata] = useState(true);
-
-  // 5. Add useEffect to fetch pdata for the logged-in user
-  useEffect(() => {
-    async function fetchPdata() {
-      try {
-        const res = await fetch("/api/pdata"); // API route from your files
-        if (!res.ok) throw new Error("Failed to fetch personal data");
-        const json = (await res.json())as ApiResponse<Pdata>;
-        if(json.data)setPdata(json.data);
-      } catch (err: any) {
-        console.error(err.message);
-      } finally {
-        setLoadingPdata(false);
-      }
-    }
-    fetchPdata();
-  }, []); 
-
+  const pdata = pdataList[0] || null;
+ 
   const renderContent = () => {
     switch (activeTab) {
       case "work":

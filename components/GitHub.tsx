@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { signIn } from "next-auth/react";
 import { 
   GitMerge, 
   GitBranch, 
@@ -11,15 +12,14 @@ import {
   Star, 
   Github as GithubIcon,
   AlertCircle
-} from "lucide-react";
-import {Gitdata,ApiResponse} from "@/types"
+} from "lucide-react";  
 
 interface GithubProps {
-  gitData?: Gitdata; // Optional prop for public view
+  gitData?: any; 
 }
 
 export default function Github({ gitData: gitDataProp }: GithubProps) {
-  const [gitData, setGitData] = useState<Gitdata|null>(null);
+  const [gitData, setGitData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,11 +34,16 @@ export default function Github({ gitData: gitDataProp }: GithubProps) {
     const fetchData = async () => {
       try {
         const res = await fetch("/api/gitdata/sync", { method: "GET" });
-        const data = (await res.json()) as ApiResponse<Gitdata>;
+        const data = await res.json();
+
+        if (res.status === 404) {
+          setGitData(null);
+          return;
+        }
 
         if (!res.ok) throw new Error(data.error || "Failed to fetch data");
 
-        if (data.data) setGitData(data.data);
+        setGitData(data.data);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -53,11 +58,11 @@ export default function Github({ gitData: gitDataProp }: GithubProps) {
     try {
       setSyncing(true);
       const res = await fetch("/api/gitdata/sync", { method: "POST" });
-      const data = (await res.json()) as ApiResponse<Gitdata>;
+      const data = await res.json();
 
       if (!res.ok) throw new Error(data.error || "Failed to sync data");
 
-      if (data.data) setGitData(data.data)
+      setGitData(data.data);
       setError(null);
     } catch (err: any) {
       setError(err.message);
@@ -67,9 +72,8 @@ export default function Github({ gitData: gitDataProp }: GithubProps) {
   };
 
   // --- Theme Constants ---
-  const offWhite = "#E9E6D7";
   const labelClass = "text-[10px] font-bold text-[#E9E6D7]/50 uppercase tracking-widest";
-  const cardClass = "bg-[#050505] border border-[#E9E6D7]/10 p-4 flex flex-col items-center justify-center gap-1 transition-all hover:border-[#E9E6D7]/30 group";
+  const cardClass = "bg-[#0a0a0a] border border-[#E9E6D7]/10 p-4 flex flex-col items-center justify-center gap-1 transition-all hover:border-[#E9E6D7]/30 group";
   const valueClass = "text-xl font-bold text-[#E9E6D7] font-mono group-hover:scale-105 transition-transform";
 
   // --- Loading State ---
@@ -90,25 +94,15 @@ export default function Github({ gitData: gitDataProp }: GithubProps) {
         <div className="p-2 bg-red-900/10 rounded-full text-red-400">
           <AlertCircle size={20} />
         </div>
-
         <span className="text-[#E9E6D7] text-sm">{error}</span>
-
-        {/* If it's YOUR profile (no gitDataProp), show Login with GitHub */}
         {!gitDataProp && (
-          <div
-            
-            className="mt-2 flex items-center gap-2 px-4 py-2 bg-[#E9E6D7] text-black text-xs font-bold uppercase tracking-wider transition-all "
+          <button
+            onClick={() => signIn("github", { callbackUrl: window.location.href })}
+            className="mt-2 flex items-center gap-2 px-4 py-2 bg-[#E9E6D7] text-black text-xs font-bold uppercase tracking-wider transition-all hover:bg-white"
           >
             <GithubIcon size={16} />
             <span>Login with GitHub</span>
-          </div>
-        )}
-
-        {/* If viewing someone else’s public card and their fetch failed */}
-        {gitDataProp && (
-          <p className="text-xs text-[#E9E6D7]/50">
-            GitHub data is currently unavailable.
-          </p>
+          </button>
         )}
       </div>
     );
@@ -120,7 +114,6 @@ export default function Github({ gitData: gitDataProp }: GithubProps) {
         <div className="text-[#E9E6D7]/20 group-hover:text-[#E9E6D7]/40 transition-colors">
           <GithubIcon size={32} />
         </div>
-
         {!gitDataProp ? (
           <>
             <div className="space-y-1">
@@ -147,7 +140,7 @@ export default function Github({ gitData: gitDataProp }: GithubProps) {
 
   // --- Main UI ---
   return (
-    <div className="w-full bg-[#0a0a0a] border border-[#E9E6D7]/20 p-5 flex flex-col gap-5 hover:border-[#E9E6D7]/40 transition-all relative">
+    <div className="w-full bg-[#0a0a0a] border border-[#E9E6D7]/10 p-5 flex flex-col gap-5 hover:border-[#E9E6D7]/40 transition-all relative">
       {/* Header */}
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-3">
@@ -162,7 +155,7 @@ export default function Github({ gitData: gitDataProp }: GithubProps) {
           </div>
         </div>
 
-        {/* Sync Button (Only if not viewing someone else's profile) */}
+        {/* Sync Button */}
         {!gitDataProp && (
           <button
             onClick={handleSync}
@@ -186,38 +179,23 @@ export default function Github({ gitData: gitDataProp }: GithubProps) {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {/* Repos */}
         <div className={cardClass}>
-          <div className="text-[#E9E6D7]/30 mb-1">
-            <GitBranch size={14} />
-          </div>
+          <div className="text-[#E9E6D7]/30 mb-1"><GitBranch size={14} /></div>
           <span className={valueClass}>{repos ?? 0}</span>
           <span className={labelClass}>Repos</span>
         </div>
-
-        {/* Stars */}
         <div className={cardClass}>
-          <div className="text-[#E9E6D7]/30 mb-1">
-            <Star size={14} />
-          </div>
+          <div className="text-[#E9E6D7]/30 mb-1"><Star size={14} /></div>
           <span className={valueClass}>{stars ?? 0}</span>
           <span className={labelClass}>Stars</span>
         </div>
-
-        {/* Followers */}
         <div className={cardClass}>
-          <div className="text-[#E9E6D7]/30 mb-1">
-            <User size={14} />
-          </div>
+          <div className="text-[#E9E6D7]/30 mb-1"><User size={14} /></div>
           <span className={valueClass}>{followers ?? 0}</span>
           <span className={labelClass}>Followers</span>
         </div>
-
-        {/* Following */}
         <div className={cardClass}>
-          <div className="text-[#E9E6D7]/30 mb-1">
-            <User size={14} />
-          </div>
+          <div className="text-[#E9E6D7]/30 mb-1"><User size={14} /></div>
           <span className={valueClass}>{following ?? 0}</span>
           <span className={labelClass}>Following</span>
         </div>
@@ -228,11 +206,9 @@ export default function Github({ gitData: gitDataProp }: GithubProps) {
         <div className="flex items-center gap-2">
           <CheckCircle2 size={14} className="text-[#E9E6D7]" />
           <span className="text-xs font-medium text-[#E9E6D7]">
-            {totalContributions ?? 0}{" "}
-            <span className="text-[#E9E6D7]/50">Contributions</span>
+            {totalContributions ?? 0} <span className="text-[#E9E6D7]/50">Contributions</span>
           </span>
         </div>
-
         <div className="flex items-center gap-1.5 text-[#E9E6D7]/30">
           <GitMerge size={12} />
           <span className="text-[10px] uppercase tracking-widest">Synced Recently</span>

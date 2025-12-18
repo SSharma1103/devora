@@ -10,6 +10,7 @@ import RightSidebar from "@/components/RightSidebar";
 import GithubPublic from "@/components/PublicGitData";
 import { Loader2 } from "lucide-react";
 import { UserProfile } from "@/types";
+import OpenSource from "@/components/OpenSource";
 // 1. Import the hook
 import { useResurceManager } from "@/hooks/useResourceManager";
 
@@ -75,6 +76,7 @@ export default function UserProfilePage() {
 
                       {/* Public GitHub card – username is guaranteed string here */}
                       <GithubPublic username={username} />
+                      <OpenSource data={user.gitdata.osContributions} />
 
                       <LeetCodeStatsCard
                         leetcodeUsername={user.pdata?.socials?.leetcode}

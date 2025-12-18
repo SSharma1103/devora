@@ -10,11 +10,12 @@ import RightSidebar from "./RightSidebar";
 import { useSession } from "next-auth/react";
 import { Pdata,ApiResponse } from "@/types";
 import { useResurceManager } from "@/hooks/useResourceManager";
+import OpenSourceSection from "./OpenSourceSection";
 
 
 export default function DashboardContent() {
   const [activeTab, setActiveTab] = useState<
-    "work" | "projects" | "github" | "leetcode"
+    "work" | "projects" | "github" | "opensource"| "leetcode"
   >("work");
   const {data:session}= useSession()
   const leetuser = session?.user?.leetcode
@@ -37,6 +38,8 @@ export default function DashboardContent() {
             <GitHub />
           </div>
         );
+        case "opensource": // <-- New Case
+        return <OpenSourceSection />;
       case "leetcode":
         // 6. Extract and pass the username prop
         if (loadingPdata) {
@@ -97,6 +100,16 @@ export default function DashboardContent() {
                 onClick={() => setActiveTab("leetcode")}
               >
                 Leetcode
+              </li>
+               <li
+                className={`pb-3 cursor-pointer whitespace-nowrap ${
+                  activeTab === "opensource"
+                    ? "text-[#E9E6D7] font-semibold border-b-2 border-white"
+                    : "text-neutral-500 hover:text-[#E9E6D7]/70"
+                }`}
+                onClick={() => setActiveTab("opensource")}
+              >
+                Open Source
               </li>
             </ul>
           </nav>

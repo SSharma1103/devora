@@ -34,7 +34,7 @@ export function useResurceManager<T extends Identifiable>(
     if (!initialData) {
       fetchItems();
     }
-  }, [initialData, fetchItems]);
+  }, [initialData]);
 
   const additem = async (newitem: any) => {
     setprocessing(true);

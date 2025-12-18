@@ -117,3 +117,12 @@ export interface UserType {
   username: string;
   pfp?: string | null;
 }
+export interface RepoContribution {
+  name: string;
+  owner: string;
+  stars: number;
+  desc: string;
+  url: string;
+  prCount: number;
+  primaryLanguage: { name: string; color: string } | null;
+}

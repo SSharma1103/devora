@@ -4,42 +4,28 @@ import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { Github, Loader2, GitPullRequest, Plus } from "lucide-react";
 import OpenSource from "./OpenSource";
+import { ApiResponse, Gitdata } from "@/types";
+import { useResurceManager } from "@/hooks/useResourceManager";
 
 export default function OpenSourceSection() {
-  const [gitData, setGitData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { 
+    items: gitDataRaw, 
+    loading, 
+    fetchItems 
+  } = useResurceManager<any>("/api/gitdata/sync");
+
   const [syncing, setSyncing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async () => {
-    try {
-      const res = await fetch("/api/gitdata/sync", { method: "GET" });
-      const data = await res.json();
-
-      if (res.status === 404) {
-        setGitData(null);
-        return;
-      }
-      if (!res.ok) throw new Error(data.error || "Failed to fetch data");
-      setGitData(data.data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const gitData = Array.isArray(gitDataRaw) ? null : (gitDataRaw as Gitdata);
 
   const handleSync = async () => {
     setSyncing(true);
     try {
       const res = await fetch("/api/gitdata/sync", { method: "POST" });
-      if (res.ok) {
-        const data = await res.json();
-        setGitData(data.data);
+      const data = (await res.json()) as ApiResponse<Gitdata>;
+      
+      if (res.ok && data.success) {
+        await fetchItems();
       }
     } catch (err) {
       console.error(err);
@@ -47,7 +33,6 @@ export default function OpenSourceSection() {
     setSyncing(false);
   };
 
-  // --- Loading ---
   if (loading) {
     return (
       <div className="w-full h-48 bg-[#0a0a0a] border border-[#E9E6D7]/20 flex flex-col items-center justify-center gap-3">
@@ -57,7 +42,6 @@ export default function OpenSourceSection() {
     );
   }
 
-  // --- Not Connected State ---
   if (!gitData) {
     return (
       <div className="w-full bg-[#0a0a0a] border border-[#E9E6D7]/20 p-10 flex flex-col items-center justify-center gap-5 text-center">
@@ -81,8 +65,9 @@ export default function OpenSourceSection() {
     );
   }
 
-  // --- Empty Data State (Connected but no OS contribs) ---
-  if (!gitData.osContributions || gitData.osContributions.length === 0) {
+  const contributions = (gitData.osContributions as unknown as any[]) || [];
+
+  if (contributions.length === 0) {
     return (
       <div className="w-full bg-[#0a0a0a] border border-[#E9E6D7]/20 p-10 flex flex-col items-center justify-center gap-4 text-center">
         <GitPullRequest size={32} className="text-[#E9E6D7]/20" />
@@ -104,6 +89,5 @@ export default function OpenSourceSection() {
     );
   }
 
-  // --- Success State ---
-  return <OpenSource data={gitData.osContributions} />;
+  return <OpenSource data={contributions} />;
 }

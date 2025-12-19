@@ -1,16 +1,8 @@
 "use client";
 
 import { GitPullRequest, Star, ExternalLink } from "lucide-react";
+import {RepoContribution} from "@/types"
 
-interface RepoContribution {
-  name: string;
-  owner: string;
-  stars: number;
-  desc: string;
-  url: string;
-  prCount: number;
-  primaryLanguage: { name: string; color: string } | null;
-}
 
 export default function OpenSource({ data }: { data: RepoContribution[] }) {
 

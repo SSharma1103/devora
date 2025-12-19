@@ -61,6 +61,8 @@ export interface GitHubStats {
   };
 }
 
+
+
 export async function fetchGitHubStats(accessToken: string): Promise<GitHubStats> {
   const { GITHUB_STATS_QUERY } = await import("@/lib/queries/github-stats");
   
@@ -82,70 +84,74 @@ export async function fetchGitHubStats(accessToken: string): Promise<GitHubStats
   return response.data.data.viewer;
 }
 
-export function processGitHubStats(stats: GitHubStats) {
+export function processGitHubStats(stats: any) {
   const now = new Date();
   const createdAt = new Date(stats.createdAt);
   const accountAge = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
 
-  // Calculate total and private repos
-  const totalRepos = stats.repositories.totalCount;
-  const privateRepos = stats.repositories.nodes.filter((repo) => repo.isPrivate).length;
-  const publicRepos = totalRepos - privateRepos;
+  // 1. Calculate Language Stats
+  const languageMap = new Map<string, { size: number; color: string }>();
+  
+  stats.topRepositories.nodes.forEach((repo: any) => {
+    repo.languages.edges.forEach((edge: any) => {
+      const { name, color } = edge.node;
+      const current = languageMap.get(name) || { size: 0, color };
+      languageMap.set(name, { size: current.size + edge.size, color });
+    });
+  });
 
-  // Calculate total stars (received)
-  const totalStars = stats.repositories.nodes.reduce((sum, repo) => sum + repo.stargazerCount, 0);
+  // Convert map to percentage array
+  let totalSize = 0;
+  languageMap.forEach((val) => (totalSize += val.size));
+  
+  const languages = Array.from(languageMap.entries())
+    .map(([name, { size, color }]) => ({
+      name,
+      color,
+      percent: parseFloat(((size / totalSize) * 100).toFixed(1)),
+    }))
+    .sort((a, b) => b.percent - a.percent)
+    .slice(0, 6); // Top 6 languages
 
-  // Calculate total commits (approximation from repositories)
-  const totalCommits = stats.repositories.nodes.reduce((sum, repo) => {
-    return sum + (repo.defaultBranchRef?.target.history.totalCount || 0);
-  }, 0);
+  // 2. Process Open Source Contributions (Repos NOT owned by user)
+  // The query fetches PR contributions. We map them to a clean format.
+  const osContributions = stats.contributionsCollection.pullRequestContributionsByRepository
+    .filter((item: any) => item.repository.owner.login !== stats.login) // Exclude own repos
+    .map((item: any) => ({
+      name: item.repository.name,
+      owner: item.repository.owner.login,
+      stars: item.repository.stargazerCount,
+      desc: item.repository.description,
+      url: item.repository.url,
+      prCount: item.contributions.totalCount,
+      primaryLanguage: item.repository.languages.nodes[0] || null
+    }))
+    .sort((a: any, b: any) => b.stars - a.stars); // Sort by Star Impact
 
-  // Total contributions this year
-  const totalContributionsThisYear = stats.contributionsCollection.contributionCalendar.totalContributions;
-
-  // Contributions in repos not owned by user
-  const contributionsNotOwned = stats.repositoriesContributedTo.totalCount;
-
-  // Total contributions (all time)
-  const totalContributions =
-    stats.contributionsCollection.totalCommitContributions +
-    stats.contributionsCollection.totalIssueContributions +
-    stats.contributionsCollection.totalPullRequestContributions +
-    stats.contributionsCollection.totalPullRequestReviewContributions;
-
-  // Process commit history (last 365 days from contribution calendar)
-  const commitHistory = stats.contributionsCollection.contributionCalendar.weeks.flatMap((week) =>
-    week.contributionDays.map((day) => ({
+  // 3. Commit History (Last 365 Days) - Same as before
+  const commitHistory = stats.contributionsCollection.contributionCalendar.weeks.flatMap((week: any) =>
+    week.contributionDays.map((day: any) => ({
       date: day.date,
       count: day.contributionCount,
     }))
   );
 
-  // Process contributions by repository
-  const contributionsByRepo = stats.contributionsCollection.commitContributionsByRepository.map((repoContrib) => ({
-    repository: `${repoContrib.repository.owner.login}/${repoContrib.repository.name}`,
-    isPrivate: repoContrib.repository.isPrivate,
-    contributions: repoContrib.contributions.totalCount,
-    commits: repoContrib.contributions.nodes.map((node) => ({
-      date: node.occurredAt,
-      count: node.commitCount,
-    })),
-  }));
-
   return {
-    repos: totalRepos,
-    privateRepos,
-    publicRepos: publicRepos, // Not stored in DB, but useful for display
-    commits: totalCommits,
+    repos: stats.repositories.totalCount,
+    // ... (Keep your existing basic stats logic) ...
+    stars: stats.repositories.nodes.reduce((acc: number, repo: any) => acc + repo.stargazerCount, 0),
     followers: stats.followers.totalCount,
     following: stats.following.totalCount,
-    stars: totalStars,
-    totalContributions,
-    contributionsThisYear: totalContributionsThisYear,
-    contributionsNotOwned,
-    accountAge,
+    privateRepos: stats.repositories.nodes.filter((repo: any) => repo.isPrivate).length,
+    commits: stats.contributionsCollection.totalCommitContributions,
+    contributionsNotOwned: stats.contributionsCollection.pullRequestContributionsByRepository.filter((item: any) => item.repository.owner.login !== stats.login).length,
+    contributionsThisYear: stats.contributionsCollection.contributionCalendar.weeks.filter((week: any) => new Date(week.contributionDays[0].date).getFullYear() === new Date().getFullYear()).length,
+    totalContributions: stats.contributionsCollection.contributionCalendar.totalContributions,
+    // NEW DATA
+    languages, // Json
+    osContributions, // Json
+    pullRequests: stats.pullRequests.totalCount,
     commitHistory,
-    contributionsByRepo, // Not stored in DB, but useful for display
+    accountAge,
   };
 }
-

@@ -2,7 +2,6 @@
 
 import { signIn } from "next-auth/react";
 import { useState } from "react";
-import { FaGithub } from "react-icons/fa";
 import { Loader2 ,Github} from "lucide-react";
 
 export default function ConnectGitHub() {

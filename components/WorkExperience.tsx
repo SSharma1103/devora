@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { 
   Briefcase, 
   Plus, 
@@ -8,10 +8,11 @@ import {
   Terminal, 
   X,
   Calendar,
-  Building2
+  Building2,
+  Trash2,
+  AlertTriangle
 } from "lucide-react";
-// 1. Import shared types
-import { WorkExp, CreateWorkExpReq, ApiResponse } from "@/types";
+import { WorkExp, CreateWorkExpReq } from "@/types";
 import { useResurceManager } from "@/hooks/useResourceManager";
 
 interface ExperienceProps {
@@ -21,15 +22,20 @@ interface ExperienceProps {
 export default function Experience({ workExpData }: ExperienceProps) {
 
   const {
-    items:experiences,
+    items: experiences,
     loading,
-    processing:adding,
+    processing: adding,
     error,
-    seterror:setError,
-    additem
-  }=useResurceManager<WorkExp>("/api/workexp", workExpData);
-  // 2. Strictly type the state
+    seterror: setError,
+    additem,
+    deleteitem
+  } = useResurceManager<WorkExp>("/api/workexp", workExpData);
+
   const [showForm, setShowForm] = useState(false);
+  
+  // State for the delete confirmation modal
+  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [newExp, setNewExp] = useState<CreateWorkExpReq>({
     title: "",
@@ -38,20 +44,40 @@ export default function Experience({ workExpData }: ExperienceProps) {
     description: "",
     image: "",
   });
-  const handleAdd =async(e:React.FormEvent)=>{
+
+  const handleAdd = async(e: React.FormEvent) => {
     e.preventDefault();
     if (!newExp.title.trim()) {
       setError("Title is required");
       return;
     }
 
-    const success= await additem(newExp);
+    const success = await additem(newExp);
     if (success) {
-      // Reset form on success
       setNewExp({ title: "", duration: "", companyName: "", description: "", image: "" });
       setShowForm(false);
     }
-    }
+  }
+
+  // Trigger the confirmation modal
+  const promptDelete = (id: number) => {
+    setItemToDelete(id);
+  }
+
+  // Cancel deletion
+  const cancelDelete = () => {
+    setItemToDelete(null);
+  }
+
+  // Execute deletion
+  const confirmDelete = async () => {
+    if (itemToDelete === null) return;
+    
+    setIsDeleting(true);
+    await deleteitem(itemToDelete);
+    setIsDeleting(false);
+    setItemToDelete(null);
+  }
 
   // --- Theme Constants ---
   const inputClasses = "w-full p-3 bg-[#0a0a0a] border border-[#E9E6D7]/20 rounded-none focus:outline-none focus:border-[#E9E6D7] focus:ring-1 focus:ring-[#E9E6D7] transition-all text-[#E9E6D7] placeholder-[#E9E6D7]/30 text-sm";
@@ -66,7 +92,7 @@ export default function Experience({ workExpData }: ExperienceProps) {
     );
 
   return (
-    <section id="experience" className="w-full text-[#E9E6D7]">
+    <section id="experience" className="w-full text-[#E9E6D7] relative">
       
       {/* Header Section */}
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#E9E6D7]/10">
@@ -80,7 +106,7 @@ export default function Experience({ workExpData }: ExperienceProps) {
           </div>
         </div>
 
-        {/* Add Button (Only if owner - indicated by no workExpData prop passed from outside) */}
+        {/* Add Button */}
         {!workExpData && (
           <button
             onClick={() => setShowForm(!showForm)}
@@ -121,7 +147,6 @@ export default function Experience({ workExpData }: ExperienceProps) {
                   type="text"
                   placeholder="Ex: Senior Engineer"
                   className={inputClasses}
-                  // 7. FIX: Handle null values for inputs
                   value={newExp.title || ""}
                   onChange={(e) => setNewExp({ ...newExp, title: e.target.value })}
                 />
@@ -203,7 +228,7 @@ export default function Experience({ workExpData }: ExperienceProps) {
           experiences.map((exp) => (
             <div
               key={exp.id}
-              className="group bg-[#0a0a0a] border border-[#E9E6D7]/10 p-5 hover:border-[#E9E6D7]/40 transition-all duration-300"
+              className="group bg-[#0a0a0a] border border-[#E9E6D7]/10 p-5 hover:border-[#E9E6D7]/40 transition-all duration-300 relative"
             >
               <div className="flex flex-col sm:flex-row gap-5 justify-between items-start">
                 
@@ -238,16 +263,31 @@ export default function Experience({ workExpData }: ExperienceProps) {
                   )}
                 </div>
 
-                {/* Optional Image */}
-                {exp.image && (
-                  <div className="hidden sm:block shrink-0">
-                    <img
-                      src={exp.image}
-                      alt={exp.title}
-                      className="w-16 h-16 object-contain rounded-sm border border-[#E9E6D7]/10 bg-white/5 p-1"
-                    />
-                  </div>
-                )}
+                {/* Right Side: Image + Delete Button */}
+                <div className="flex items-start gap-4">
+                  {/* Optional Image */}
+                  {exp.image && (
+                    <div className="hidden sm:block shrink-0">
+                      <img
+                        src={exp.image}
+                        alt={exp.title}
+                        className="w-16 h-16 object-contain rounded-sm border border-[#E9E6D7]/10 bg-white/5 p-1"
+                      />
+                    </div>
+                  )}
+
+                  {/* DELETE BUTTON */}
+                  {!workExpData && (
+                    <button
+                      onClick={() => promptDelete(exp.id)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-red-900/20 text-red-400/60 hover:text-red-400 rounded-sm"
+                      title="Delete Position"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
+
               </div>
             </div>
           ))
@@ -265,6 +305,70 @@ export default function Experience({ workExpData }: ExperienceProps) {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {itemToDelete !== null && (
+        <div className="fixed inset-0 backdrop-blur-xl bg-black/80 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div 
+            className="bg-[#050505] w-full max-w-sm border border-[#E9E6D7]/20 shadow-2xl relative flex flex-col"
+            style={{ boxShadow: '0 0 40px -10px rgba(220, 38, 38, 0.1)' }} // Slight red glow
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-[#E9E6D7]/10 px-5 py-3 bg-[#050505]/95 backdrop-blur-md">
+              <div className="flex items-center gap-2 text-red-400">
+                <AlertTriangle size={14} />
+                <h2 className="text-sm font-bold tracking-tight uppercase">Confirm Deletion</h2>
+              </div>
+              <button
+                onClick={cancelDelete}
+                className="text-[#E9E6D7]/40 hover:text-[#E9E6D7] transition-colors p-1"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6">
+              <div className="flex items-center gap-2 mb-4 text-[#E9E6D7]/40 text-xs font-mono">
+                 <Terminal size={12} />
+                 <span>exec delete_entry.sh</span>
+              </div>
+              
+              <p className="text-[#E9E6D7]/80 text-sm leading-relaxed mb-6">
+                Are you sure you want to remove this position? This action cannot be undone and will be removed from your timeline.
+              </p>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={cancelDelete}
+                  disabled={isDeleting}
+                  className="flex-1 py-2.5 text-[10px] font-bold uppercase tracking-wider border border-[#E9E6D7]/20 text-[#E9E6D7] hover:bg-[#E9E6D7]/5 hover:border-[#E9E6D7]/40 transition-all disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={isDeleting}
+                  className="flex-1 py-2.5 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-wider bg-red-900/20 text-red-400 border border-red-900/30 hover:bg-red-900/40 transition-all disabled:opacity-50"
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="animate-spin" size={12} />
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={12} />
+                      <span>Delete</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </section>
   );
 }

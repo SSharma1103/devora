@@ -3,32 +3,20 @@ query {
   viewer {
     login
     createdAt
-    bio
     avatarUrl
-    repositories(first: 100) {
-      totalCount
-      nodes {
-        isPrivate
-        stargazerCount
-        defaultBranchRef {
-          target {
-            ... on Commit {
-              history(first: 1) {
-                totalCount
-              }
-            }
-          }
-        }
-      }
-    }
-    repositoriesContributedTo(first: 100, contributionTypes: [COMMIT, PULL_REQUEST, ISSUE]) {
-      totalCount
-    }
+    
+    # 1. Total PRs and Reviews
+    pullRequests(first: 1) { totalCount }
+    issueComments(first: 1) { totalCount }
+    
+    # 2. Contributions (The detailed breakdown)
     contributionsCollection {
       totalCommitContributions
-      totalIssueContributions
       totalPullRequestContributions
       totalPullRequestReviewContributions
+      totalIssueContributions
+      
+      # The Heatmap Data
       contributionCalendar {
         totalContributions
         weeks {
@@ -38,29 +26,52 @@ query {
           }
         }
       }
-      commitContributionsByRepository(maxRepositories: 100) {
+      
+      # Repos they contributed to (Open Source Section)
+      pullRequestContributionsByRepository(maxRepositories: 10) {
         repository {
           name
-          owner {
-            login
+          owner { login }
+          stargazerCount
+          description
+          url
+          languages(first: 1, orderBy: {field: SIZE, direction: DESC}) {
+            nodes { name color }
           }
-          isPrivate
         }
-        contributions(first: 100) {
-          totalCount
-          nodes {
-            occurredAt
-            commitCount
+        contributions(first: 1) { totalCount }
+      }
+    }
+
+    # 3. Their Top Repos (Hero Section)
+    repositories(first: 6, ownerAffiliations: OWNER, orderBy: {field: STARGAZERS, direction: DESC}, isFork: false) {
+      totalCount
+      nodes {
+        name
+        description
+        stargazerCount
+        forkCount
+        url
+        languages(first: 1, orderBy: {field: SIZE, direction: DESC}) {
+          nodes { name color }
+        }
+      }
+    }
+    
+    # 4. Language Breakdown (Calculated from top 50 repos)
+    topRepositories: repositories(first: 50, ownerAffiliations: OWNER, orderBy: {field: PUSHED_AT, direction: DESC}) {
+      nodes {
+        languages(first: 5, orderBy: {field: SIZE, direction: DESC}) {
+          edges {
+            size
+            node { name color }
           }
         }
       }
     }
-    followers {
-      totalCount
-    }
-    following {
-      totalCount
-    }
+    
+    followers { totalCount }
+    following { totalCount }
   }
 }
 `;
@@ -85,4 +96,3 @@ query($cursor: String) {
   }
 }
 `;
-

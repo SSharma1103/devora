@@ -45,6 +45,8 @@ model Gitdata {
   privateRepos          Int?
   totalContributions    Int?
   user                  User?    @relation(fields: [userId], references: [id])
+  languages             Json?
+  osContributions       Json?
 }
 
 model Pdata {

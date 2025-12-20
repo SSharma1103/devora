@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react"; //
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -12,17 +12,19 @@ import {
   CheckCircle2,
   Cpu,
 } from "lucide-react";
-// 1. Import the hook
 import { useResurceManager } from "@/hooks/useResourceManager";
 
 export default function SetupUsername() {
-  // --- Real hooks ---
   const { data: session, status, update } = useSession();
   const router = useRouter();
 
-  // 2. Initialize resource manager
-  // We use <any> to bypass the 'Identifiable' constraint since the response doesn't have an ID
-  // We pass [] as initialData to prevent the hook from trying to GET data on mount
+  // 1. ADDED: Redirect to login if user is not authenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/");
+    }
+  }, [status, router]);
+
   const { 
     additem, 
     processing, 
@@ -32,7 +34,6 @@ export default function SetupUsername() {
 
   const [username, setUsername] = useState("");
   
-  // Stable Sys.Id per mount, not per render
   const [sysId] = useState(() =>
     Math.random().toString(36).substring(7).toUpperCase()
   );
@@ -58,16 +59,12 @@ export default function SetupUsername() {
       return;
     }
 
-    // 3. Use additem from the hook to POST the data
     const success = await additem({ username: normalizedUsername });
 
     if (success) {
-      // Refresh session with new username
       await update();
-      // Redirect to home page
       router.push("/");
     }
-    // Note: If success is false, the hook automatically sets the 'error' state
   };
 
   const inputClasses =
@@ -89,18 +86,9 @@ export default function SetupUsername() {
     );
   }
 
-  // --- Not signed in ---
+  // 2. UPDATED: If no session, return null (render nothing) while the useEffect redirects
   if (!session) {
-    return (
-      <div className="min-h-[50vh] flex flex-col items-center justify-center p-6 text-[#E9E6D7]">
-        <div className="p-4 border border-dashed border-[#E9E6D7]/20 bg-[#0a0a0a] flex flex-col items-center gap-3">
-          <AlertCircle className="text-[#E9E6D7]/40" size={24} />
-          <span className="text-xs uppercase tracking-widest font-mono">
-            Authentication Required
-          </span>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   // Try both shapes: session.user.username and session.username (if customized)

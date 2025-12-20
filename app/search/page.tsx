@@ -35,20 +35,6 @@ export default function DiscoverPage() {
     }
   };
 
-  // ... (static projectData remains the same) ...
-  const projectData = [
-    {
-      title: "AI Code Assistant",
-      description: "An AI-powered assistant that reviews and suggests code.",
-      tech: ["OpenAI API", "Next.js", "Tailwind CSS"],
-    },
-    {
-      title: "Decentralized Identity System",
-      description: "A blockchain-based identity verification protocol.",
-      tech: ["Rust", "Solidity", "Web3.js"],
-    },
-  ];
-
   // Developer card (live data)
   const DeveloperCard = ({ dev }: { dev: UserType }) => (
     <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 transition-all hover:border-[#E9E6D7] cursor-pointer">

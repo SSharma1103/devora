@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
 import Image from "next/image";
+// Ensure these paths are correct for your project structure
 import LogoutButton from "../components/LogoutButton";
 import Dashboard from "@/components/Dashboard";
 import ConnectGitHub from "@/components/ConnectGitHub";
@@ -14,7 +15,10 @@ import Sidebar from "@/components/sidebar";
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  
+  // 1. Separate state for each provider
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isGithubLoading, setIsGithubLoading] = useState(false);
 
   // Redirect to username setup if logged in but missing username
   useEffect(() => {
@@ -23,19 +27,30 @@ export default function Home() {
     }
   }, [session, status, router]);
 
-  // Handle OAuth sign-in
-  const handleSignIn = async (provider: "google" | "github") => {
+  // Handle Google Sign-in
+  const handleSignInGoogle = async () => {
     try {
-      setLoading(true);
-      await signIn(provider, { callbackUrl: "/" });
+      setIsGoogleLoading(true);
+      await signIn("google", { callbackUrl: "/" });
     } catch (err) {
       console.error("Login failed:", err);
-    } finally {
-      setLoading(false);
+      // Only set loading to false on error, otherwise the page reloads/redirects
+      setIsGoogleLoading(false); 
     }
   };
 
-  // Loading screen
+  // Handle GitHub Sign-in
+  const handleSignInGithub = async () => {
+    try {
+      setIsGithubLoading(true);
+      await signIn("github", { callbackUrl: "/" });
+    } catch (err) {
+      console.error("Login failed:", err);
+      setIsGithubLoading(false);
+    }
+  };
+
+  // Loading screen for session check
   if (status === "loading") {
     return (
       <div className="flex justify-center items-center h-screen text-[#E9E6D7]">
@@ -74,22 +89,33 @@ export default function Home() {
 
             {/* OAuth Login Buttons */}
             <div className="flex flex-col space-y-4">
+              {/* GOOGLE BUTTON */}
               <button
-                onClick={() => handleSignIn("google")}
-                disabled={loading}
-                className="flex items-center justify-center space-x-3 bg-gray-900 hover:bg-gray-800 text-[#E9E6D7] font-semibold py-3 rounded-lg border border-gray-700 transition active:scale-95"
+                onClick={handleSignInGoogle}
+                // Disable if EITHER is loading to prevent double clicking
+                disabled={isGoogleLoading || isGithubLoading}
+                className={`flex items-center justify-center space-x-3 bg-gray-900 hover:bg-gray-800 text-[#E9E6D7] font-semibold py-3 rounded-lg border border-gray-700 transition active:scale-95 ${
+                  isGoogleLoading || isGithubLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 <FcGoogle className="text-2xl" />
-                <span>{loading ? "Signing in..." : "Continue with Google"}</span>
+                <span>
+                  {isGoogleLoading ? "Signing in..." : "Continue with Google"}
+                </span>
               </button>
 
+              {/* GITHUB BUTTON */}
               <button
-                onClick={() => handleSignIn("github")}
-                disabled={loading}
-                className="flex items-center justify-center space-x-3 bg-gray-900 hover:bg-gray-800 text-[#E9E6D7] font-semibold py-3 rounded-lg border border-gray-700 transition active:scale-95"
+                onClick={handleSignInGithub}
+                disabled={isGoogleLoading || isGithubLoading}
+                className={`flex items-center justify-center space-x-3 bg-gray-900 hover:bg-gray-800 text-[#E9E6D7] font-semibold py-3 rounded-lg border border-gray-700 transition active:scale-95 ${
+                   isGoogleLoading || isGithubLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 <FaGithub className="text-xl" />
-                <span>{loading ? "Signing in..." : "Continue with GitHub"}</span>
+                <span>
+                  {isGithubLoading ? "Signing in..." : "Continue with GitHub"}
+                </span>
               </button>
             </div>
           </div>
@@ -108,11 +134,7 @@ export default function Home() {
 
       {/* Main Dashboard Area */}
       <div className="flex-1 ml-20 p-8 overflow-y-auto">
-       
-
         {!session.hasGitHub && <ConnectGitHub />}
-
-        
         <Dashboard />
       </div>
     </div>

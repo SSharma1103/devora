@@ -78,7 +78,7 @@ export default function UserProfilePage() {
                       {/* Public GitHub card – username is guaranteed string here */}
                       <GithubPublic username={username} />
 
-                      <OpenSource data={user.gitdata.osContributions} />
+                      <OpenSource data={user.gitdata?.osContributions??null} />
 
                       <LeetCodeStatsCard
                         leetcodeUsername={user.pdata?.socials?.leetcode}

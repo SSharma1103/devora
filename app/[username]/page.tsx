@@ -12,7 +12,6 @@ import GithubPublic from "@/components/PublicGitData";
 import { Loader2 } from "lucide-react";
 import { UserProfile } from "@/types";
 import OpenSource from "@/components/OpenSource";
-// 1. Import the hook
 import { useResurceManager } from "@/hooks/useResourceManager";
 
 export default function UserProfilePage() {
@@ -23,9 +22,7 @@ export default function UserProfilePage() {
   const username =
     (Array.isArray(rawUsername) ? rawUsername[0] : rawUsername) ?? "";
 
-  // 2. Use the hook to fetch user data
-  // Note: The API returns a single object for this endpoint, but the hook is typed for arrays.
-  // We use the hook for its loading/error logic and cast the result below.
+  // Use the hook to fetch user data
   const {
     items: userRaw,
     loading,
@@ -34,9 +31,9 @@ export default function UserProfilePage() {
     username ? `/api/user?username=${encodeURIComponent(username)}` : ""
   );
 
-  // 3. Cast the result: The runtime value will be the User object, not an array.
-  // We treat the "items" state as the single user profile.
-  const user = userRaw as unknown as UserProfile | null;
+  // ✅ FIX 1: Safely extract the first item from the array. 
+  // Since the hook always returns an array (items), we take the first element.
+  const user = userRaw[0] || null;
 
   return (
     <div className="flex bg-black text-[#E9E6D7] min-h-screen">
@@ -55,8 +52,9 @@ export default function UserProfilePage() {
           </div>
         )}
 
-        {/* 4. Check if we have valid user data (and ensure it's not the initial empty array from the hook) */}
-        {user && !Array.isArray(user) && !loading && !error && (
+        {/* ✅ FIX 2: Removed '!Array.isArray(user)' check. 
+            'user' is now a single object (or null), so we just check if it exists. */}
+        {user && !loading && !error && (
           <div className="w-full">
             <PublicProfileHeader
               user={user}
@@ -78,10 +76,12 @@ export default function UserProfilePage() {
                       {/* Public GitHub card – username is guaranteed string here */}
                       <GithubPublic username={username} />
 
-                      <OpenSource data={user.gitdata?.osContributions??null} />
+                      <OpenSource
+                        data={user.gitdata?.osContributions ?? null}
+                      />
 
                       <LeetCodeStatsCard
-                        leetcodeUsername={user.pdata?.socials?.leetcode}
+                        leetcodeUsername={user.leetcode}
                       />
                     </section>
                   </div>

@@ -28,6 +28,7 @@ export default function DashboardContent() {
 
   const { data: session } = useSession();
   const leetuser = session?.user?.leetcode ?? null;
+  console.log(leetuser)
 
   const [pdata, setPdata] = useState<Pdata | null>(null);
   const [loadingPdata, setLoadingPdata] = useState(true);

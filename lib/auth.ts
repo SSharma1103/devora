@@ -234,6 +234,7 @@ export const authOptions: AuthOptions = {
             banner: user.banner ?? session.user?.banner, 
             followersCount: user._count.followers,
             followingCount: user._count.following,
+            leetcode: user.leetcode,
           };
         }
       }

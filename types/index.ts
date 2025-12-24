@@ -110,6 +110,7 @@ export interface UserProfile {
   };
   isFollowedByCurrentUser: boolean;
   isCurrentUser: boolean;
+  leetcode:string|null;
 }
 export interface UserType {
   id: number;

@@ -13,14 +13,13 @@ import {
   Github as GithubIcon,
   AlertCircle
 } from "lucide-react";  
-import { ApiResponse,Gitdata } from "@/types";
 
 interface GithubProps {
   gitData?: any; 
 }
 
 export default function Github({ gitData: gitDataProp }: GithubProps) {
-  const [gitData, setGitData] = useState<Gitdata|null>(null);
+  const [gitData, setGitData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +34,7 @@ export default function Github({ gitData: gitDataProp }: GithubProps) {
     const fetchData = async () => {
       try {
         const res = await fetch("/api/gitdata/sync", { method: "GET" });
-        const data = (await res.json())as ApiResponse<Gitdata>;
+        const data = await res.json();
 
         if (res.status === 404) {
           setGitData(null);

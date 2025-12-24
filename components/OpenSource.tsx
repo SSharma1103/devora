@@ -1,10 +1,34 @@
 "use client";
 
-import { GitPullRequest, Star, ExternalLink } from "lucide-react";
-import {RepoContribution} from "@/types"
+import { GitPullRequest, Star } from "lucide-react";
 
+interface RepoContribution {
+  name: string;
+  owner: string;
+  stars: number;
+  desc: string;
+  url: string;
+  prCount: number;
+  primaryLanguage: { name: string; color: string } | null;
+}
 
-export default function OpenSource({ data }: { data: RepoContribution[] }) {
+export default function OpenSource({
+  data,
+}: {
+  data: RepoContribution[] | null | undefined;
+}) {
+  const safeData = Array.isArray(data) ? data : [];
+
+  if (safeData.length === 0) {
+    return (
+      <div className="w-full bg-[#0a0a0a] border border-[#E9E6D7]/10 p-6 mt-6">
+        <h2 className="text-[#E9E6D7] font-bold text-lg">Open Source</h2>
+        <p className="text-[#E9E6D7]/40 text-sm mt-2">
+          No open source contributions found.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-[#0a0a0a] border border-[#E9E6D7]/10 p-6 mt-6">
@@ -21,8 +45,8 @@ export default function OpenSource({ data }: { data: RepoContribution[] }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {data.map((repo) => (
-          <a 
+        {safeData.map((repo) => (
+          <a
             key={`${repo.owner}/${repo.name}`}
             href={repo.url}
             target="_blank"
@@ -37,25 +61,23 @@ export default function OpenSource({ data }: { data: RepoContribution[] }) {
                 {repo.stars.toLocaleString()}
               </div>
             </div>
-            
+
             <p className="text-[#E9E6D7]/60 text-xs line-clamp-2 mb-4 h-8">
               {repo.desc}
             </p>
 
             <div className="flex items-center justify-between pt-3 border-t border-[#E9E6D7]/5">
-              <div className="flex items-center gap-2">
-                {repo.primaryLanguage && (
-                  <span className="flex items-center gap-1.5 text-[10px] text-[#E9E6D7]/60">
-                    <span 
-                      className="w-2 h-2 rounded-full" 
-                      style={{ backgroundColor: repo.primaryLanguage.color }}
-                    />
-                    {repo.primaryLanguage.name}
-                  </span>
-                )}
-              </div>
+              {repo.primaryLanguage && (
+                <span className="flex items-center gap-1.5 text-[10px] text-[#E9E6D7]/60">
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: repo.primaryLanguage.color }}
+                  />
+                  {repo.primaryLanguage.name}
+                </span>
+              )}
               <span className="text-[10px] font-bold bg-[#E9E6D7]/10 text-[#E9E6D7] px-2 py-1 rounded">
-                {repo.prCount} PR{repo.prCount > 1 ? 's' : ''}
+                {repo.prCount} PR{repo.prCount > 1 ? "s" : ""}
               </span>
             </div>
           </a>

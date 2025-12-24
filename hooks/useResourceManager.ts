@@ -23,7 +23,10 @@ export function useResurceManager<T extends Identifiable>(
       if (!res.ok) {
         throw new Error(json.error || "Failed to fetch items");
       }
-      if (json.data) setitems(json.data);
+      if (json.data) {
+        const dataArray = Array.isArray(json.data) ? json.data : [json.data];
+        setitems(dataArray as T[]);
+      }
     } catch (err: any) {
       seterror(err.message || "Error");
     } finally {

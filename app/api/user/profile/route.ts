@@ -48,8 +48,6 @@ export async function GET(request: Request) {
     );
   }
 }
-
-// PATCH: Updates profile and returns the FULL user object
 export async function PATCH(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -62,11 +60,14 @@ export async function PATCH(request: Request) {
 
     const userId = parseInt(session.userId);
     const body = await request.json();
-    const { pfp, banner, leetcode } = body;
+    // 1. Extract 'name' from the body
+    const { name, pfp, banner, leetcode } = body;
 
-    // Validate inputs
-    const dataToUpdate: { pfp?: string; banner?: string; leetcode?: string } = {};
+    // 2. Update the type definition to include 'name'
+    const dataToUpdate: { name?: string; pfp?: string; banner?: string; leetcode?: string } = {};
     
+    // 3. Add the validation and assignment logic for 'name'
+    if (typeof name === 'string') dataToUpdate.name = name;
     if (typeof pfp === 'string') dataToUpdate.pfp = pfp;
     if (typeof banner === 'string') dataToUpdate.banner = banner;
     if (typeof leetcode === 'string') dataToUpdate.leetcode = leetcode;
@@ -78,14 +79,11 @@ export async function PATCH(request: Request) {
        );
     }
 
-    // Update the user
-    // Note: We do NOT use 'select' here, so Prisma returns the FULL user object.
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: dataToUpdate,
     });
 
-    // Since 'updatedUser' has all fields, we can safely use the full <User> type here
     return NextResponse.json<ApiResponse<User>>({ 
       success: true, 
       data: updatedUser 
